@@ -10,8 +10,15 @@ output:
 ---
 
 
+```{r global options}
 
-```{r}
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+```{r libraries}
+
 
 # load required libraries
 library(ggplot2)
@@ -23,8 +30,7 @@ library(dplyr)
 # define functions
 `%notin%` <- Negate(`%in%`)
 
-# Set global chunk options
-knitr::opts_chunk$set(warning = FALSE)
+
 
 ```
 
