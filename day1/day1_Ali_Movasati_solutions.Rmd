@@ -31,7 +31,6 @@ library(dplyr)
 `%notin%` <- Negate(`%in%`)
 
 
-
 ```
 
 
@@ -50,8 +49,7 @@ std_err <- 2
 beta0 <- 1
 beta1 <- 2
 
-# set computer seed for reproducibility
-set.seed(333)
+
 
 # generate independent and dependent variables
 x <- rnorm(n , mu, std_sig^2)
@@ -59,7 +57,7 @@ y <- beta0 + beta1*x + rnorm(n, 0, std_err^2)
 
 # generate linear model
 model <- lm(y~x)
-summary(model)
+
 
 # extract estimated parameters
 est_intercept <- model$coefficients[1]
@@ -92,7 +90,7 @@ of the distribution from which the sample set is drawn from.
 repeats <- 1000
 
 # generate and store estimated bootstrapping values for intercept and slope of regression lines
-model_coef_df <- data.frame()
+model_coef_df1 <- data.frame()
 
 for (i in 1:repeats){
     x_bts <- sample(x, n, replace = TRUE)
@@ -100,18 +98,18 @@ for (i in 1:repeats){
     model <- lm(y_bts~x_bts)
     est_intercept <- model$coefficients[1]
     est_slope <- model$coefficients[2]
-    model_coef_df <- rbind(model_coef_df, c(est_intercept,est_slope))
+    model_coef_df1 <- rbind(model_coef_df1, c(est_intercept,est_slope))
 }
 
-colnames(model_coef_df) <- c("est_intercept", "est_slope")
+colnames(model_coef_df1) <- c("est_intercept", "est_slope")
 
 
 # generate plot
 p <- df %>% ggplot(aes(x = x, y = y)) +
         geom_point()
 
-for (i in 1:nrow(model_coef_df)) {
-  p <- p + geom_abline(intercept = model_coef_df$est_intercept[i], slope = model_coef_df$est_slope[i], color = "blue", size = 0.5, linetype = "dashed")
+for (i in 1:nrow(model_coef_df1)) {
+  p <- p + geom_abline(intercept = model_coef_df1$est_intercept[i], slope = model_coef_df1$est_slope[i], color = "blue", size = 0.5, linetype = "dashed")
 }
 
 p + geom_abline(intercept = beta0, slope = beta1, color = "red", size = 1.5) 
@@ -128,12 +126,14 @@ summary of each estimate based on 1000 bootstrapping:
 
 Intercept:
 ```{r} 
-summary(model_coef_df$est_intercept)
+
+summary(model_coef_df1$est_intercept)
+
 ```
 
 Slope:
 ```{r} 
-summary(model_coef_df$est_slope)
+summary(model_coef_df1$est_slope)
 ```
 
 
@@ -148,7 +148,7 @@ by generating new numbers from the known distribution.
 repeats <- 1000
 
 # generate and store estimated bootstrapping values for intercept and slope of regression lines
-model_coef_df <- data.frame()
+model_coef_df2 <- data.frame()
 
 for (i in 1:repeats){
     x_resampling <- rnorm(n , mu, std_sig^2)
@@ -156,18 +156,18 @@ for (i in 1:repeats){
     model <- lm(y_resampling~x_resampling)
     est_intercept <- model$coefficients[1]
     est_slope <- model$coefficients[2]
-    model_coef_df <- rbind(model_coef_df, c(est_intercept,est_slope))
+    model_coef_df2 <- rbind(model_coef_df2, c(est_intercept,est_slope))
 }
 
-colnames(model_coef_df) <- c("est_intercept", "est_slope")
+colnames(model_coef_df2) <- c("est_intercept", "est_slope")
 
 
 # generate plot
 p <- df %>% ggplot(aes(x = x, y = y)) +
         geom_point()
 
-for (i in 1:nrow(model_coef_df)) {
-  p <- p + geom_abline(intercept = model_coef_df$est_intercept[i], slope = model_coef_df$est_slope[i], color = "blue", size = 0.5, linetype = "dashed")
+for (i in 1:nrow(model_coef_df2)) {
+  p <- p + geom_abline(intercept = model_coef_df2$est_intercept[i], slope = model_coef_df2$est_slope[i], color = "blue", size = 0.5, linetype = "dashed")
 }
 
 p + geom_abline(intercept = beta0, slope = beta1, color = "red", size = 1.5) 
@@ -180,11 +180,26 @@ p + geom_abline(intercept = beta0, slope = beta1, color = "red", size = 1.5)
 Both methods of bootstrapping and resampling in this case works because we have enough data points for
 bootstrapping and we know the parameters of the population for resampling method.
 
+### << Comments >>
+
+- In A section we estimate the intercept and slope of the linear regression. The estimates are slightly
+different from true parameters of the model due to the variation that is caused by the error term of the model.
+
+- In section B, we used **bootstrapping** to obtain distribution estimates for the model parameters. The estimate
+for the intercept is `r as.numeric(summary(model_coef_df1$est_intercept)[4])` with 95% CI [`r as.numeric(quantile(model_coef_df1$est_intercept, probs = c(0.05, 0.95))[1])`,`r as.numeric(quantile(model_coef_df1$est_intercept, probs = c(0.05, 0.95))[2])`] and
+for the slope `r as.numeric(summary(model_coef_df1$est_slope)[4])` with 95% CI [`r as.numeric(quantile(model_coef_df1$est_slope, probs = c(0.05, 0.95))[1])`,`r as.numeric(quantile(model_coef_df1$est_slope, probs = c(0.05, 0.95))[2])`]
+
+
+- In section C, we used **resampling** to obtain distribution estimates for the model parameters. The estimate
+for the intercept is `r as.numeric(summary(model_coef_df2$est_intercept)[4])` with 95% CI [`r as.numeric(quantile(model_coef_df2$est_intercept, probs = c(0.05, 0.95))[1])`,`r as.numeric(quantile(model_coef_df2$est_intercept, probs = c(0.05, 0.95))[2])`] and
+for the slope `r as.numeric(summary(model_coef_df2$est_slope)[4])` with 95% CI [`r as.numeric(quantile(model_coef_df2$est_slope, probs = c(0.05, 0.95))[1])`,`r as.numeric(quantile(model_coef_df2$est_slope, probs = c(0.05, 0.95))[2])`]
+
+
 
 # Problem 2
 
 
-```{r problem 2 load and prepare the data}
+```{r problem 2 load and prepare the data, results=FALSE}
 
 # load and prepare data
 library(fma)
@@ -221,31 +236,33 @@ dev.off()
 degrees <- 1:8
 k_folds <- 5
 
+# set computer seed for reproducibility
+set.seed(4)
+
 
 # calculate and store rss values
 
 rss_df <- data.frame()
 
-for (i in degrees){
-    for (j in 1:100){
-        fold_indices <- sample(rep(1:k_folds, length.out = nrow(coal_df)))
-        for (k in 1:k_folds){
-            training_indices <- which(fold_indices != k)
-            model <- lm(coal ~ poly(year, degrees[i]), data = coal_df, subset = training_indices)
-            res_valid <- predict(model, coal_df[-training_indices, ])
-            rss <- sum((res_valid - coal_df$coal[-training_indices])^2)
-            rss_df <- rbind(rss_df, c(i, j, k, rss))
-        }
+for (i in 1:100){
+    fold_indices <- sample(rep(1:k_folds, length.out = nrow(coal_df)))
+    for (j in degrees){
+        training_indices <- which(fold_indices != 1)
+        model <- lm(coal ~ poly(year, j), data = coal_df, subset = training_indices)
+        res_valid <- predict(model, coal_df[-training_indices, ])
+        rss <- sum((res_valid - coal_df$coal[-training_indices])^2)
+        rss_df <- rbind(rss_df, c(i, j, rss))
     }
 }
 
-colnames(rss_df) <- c("degree", "rep", "fold_nr", "rss")
+
+colnames(rss_df) <- c("rep", "degree", "rss")
 
 
 # print average rss per polynomial degree
-rss_summary <- rss_df %>% group_by(degree, fold_nr) %>% summarize(mean_rss = mean(rss), .groups = "drop") %>% filter(fold_nr == 1)
+rss_summary <- rss_df %>% group_by(degree) %>% summarize(median_rss = median(rss))
 
-paste0("The polynomial model with degree ", rss_summary$degree[which.min(rss_summary$mean_rss)], " has the lowest mean of RSS of ", round(rss_summary$mean_rss[which.min(rss_summary$mean_rss)],2))
+paste0("The polynomial model with degree ", rss_summary$degree[which.min(rss_summary$median_rss)], " has the lowest mean of RSS of ", round(rss_summary$median_rss[which.min(rss_summary$median_rss)],2))
 
 ```
 
@@ -262,34 +279,43 @@ we are reserving the first and last 5 years present in the data for the test set
 # reserve test set
 test_set_indices <- c(1:5, (nrow(coal_df)-4):nrow(coal_df))
 
+
 # use the rest of data points for model creation and evaluation
 model_set_indices <- which(1:49 %notin% test_set_indices)
 
 # degrees to be checked to find the optimal model
-degrees <- 1:10
+degrees <- 1:8
 
 # iterate the 5-fold cross validation step and store the rss
 rss_df2 <- data.frame()
 
-set.seed(333)
-for (i in degrees){
-    for (j in 1:100){
+
+for (i in 1:100){
+    for (j in degrees){
             training_set_indices <- sample(model_set_indices,26)
-            model <- lm(coal ~ poly(year, degrees[i]), data = coal_df, subset = training_set_indices)
+            model <- lm(coal ~ poly(year, j), data = coal_df, subset = training_set_indices)
             res_valid <- predict(model, coal_df[-c(test_set_indices,training_set_indices), ])
             rss <- sum((res_valid - coal_df$coal[-c(test_set_indices,training_set_indices)])^2)
             rss_df2 <- rbind(rss_df2, c(i, j, rss))
     }
 }
 
-colnames(rss_df2) <- c("degree", "rep", "rss")
+colnames(rss_df2) <- c("rep", "degree", "rss")
 
 # find the polynomial degree with the lowest rss average
-rss_summary2 <- rss_df2 %>% group_by(degree) %>% summarize(mean_rss = mean(rss), .groups = "drop") %>% filter(mean_rss == min(mean_rss))
+rss_summary2 <- rss_df2 %>% group_by(degree) %>% summarize(median_rss = median(rss), .groups = "drop") %>% filter(median_rss == min(median_rss))
 
-paste0("The polynomial model with degree ", rss_summary2$degree[which.min(rss_summary2$mean_rss)], " has the lowest mean of RSS of ", round(rss_summary2$mean_rss[which.min(rss_summary2$mean_rss)],2))
+paste0("The polynomial model with degree ", rss_summary2$degree[which.min(rss_summary2$median_rss)], " has the lowest mean of RSS of ", round(rss_summary2$median_rss[which.min(rss_summary2$median_rss)],2))
 
-opt_degree <- rss_summary2$degree[which.min(rss_summary2$mean_rss)]
+opt_degree <- rss_summary2$degree[which.min(rss_summary2$median_rss)]
+
+
+
+
+```
+
+
+```{r test model on test data set}
 
 # recreate the model with the optimal polynomial degree and predict function for the test set!
 model <- lm(coal ~ poly(year, opt_degree), data = coal_df, subset = model_set_indices)
@@ -297,10 +323,99 @@ res_valid <- predict(model, coal_df[test_set_indices,])
 rss <- sum((res_valid - coal_df$coal[test_set_indices])^2)
 
 
+# visualization
+
+y_predicted <- predict(model, coal_df)
+predicted_data <- data.frame(year = year, predicted = y_predicted)
+
+
+ggplot(coal_df[test_set_indices,], aes(x = year, y = coal)) +
+    geom_point(color = "blue") +   # Scatter plot
+    geom_line(data = predicted_data, aes(x = year, y = y_predicted), color = "red", size = 1.5) +     # Line properties
+    labs(title = "LM of optimal model with suggested non-random test set", 
+        x = "year", y = "coal")
 
 ```
 
-The RSS of the "optimal model" which is a polynomial model with degree of `r opt_degree` is `r rss`
 
-Non-random splitting of the data is not a good practice and can introduced biases in evaluating 
-the performance of the model.
+The RSS of the "optimal model" which is a polynomial model with degree of `r opt_degree` is `r rss` when tested on the test data set. 
+
+
+
+
+
+### << Comments >>
+
+- Cross validation is a method to measure model performance. In this problem we fitted polynomial models with different degrees to our data and measured RSS by cross validation.
+The lower the RSS, the "better" the model performs. Based on that criteria, the polynomial model with degree of `r opt_degree` was found to perform the best.
+
+- In the second part of the problem, we reserved a test set before doing the same procedure and at the end measured the performance of the model on the test
+Non-random splitting of the test set is not a good practice and can introduced biases in evaluating the performance of the model. As in this case, the model performance on the test
+set based on the RSS value is a lot poorer than what we would have accepted from cross validation. Probably the non-random selection of the test set also impacted our decision on the 
+optimal model. Therefore, it would be a better approach to randomly split the data, ensuring that both the training and test sets are representative of the underlying distribution.
+
+If we do the same procedure but with random selection of the test set:
+
+
+```{r 2.b (random), echo=FALSE}
+
+# reserve test set
+test_set_indices <- sample(1:49,10)
+
+# use the rest of data points for model creation and evaluation
+model_set_indices <- which(1:49 %notin% test_set_indices)
+
+# degrees to be checked to find the optimal model
+degrees <- 1:8
+
+# iterate the 5-fold cross validation step and store the rss
+rss_df2 <- data.frame()
+
+
+for (i in 1:100){
+    for (j in degrees){
+            training_set_indices <- sample(model_set_indices,26)
+            model <- lm(coal ~ poly(year, j), data = coal_df, subset = training_set_indices)
+            res_valid <- predict(model, coal_df[-c(test_set_indices,training_set_indices), ])
+            rss <- sum((res_valid - coal_df$coal[-c(test_set_indices,training_set_indices)])^2)
+            rss_df2 <- rbind(rss_df2, c(i, j, rss))
+    }
+}
+
+colnames(rss_df2) <- c("rep", "degree", "rss")
+
+# find the polynomial degree with the lowest rss average
+rss_summary2 <- rss_df2 %>% group_by(degree) %>% summarize(median_rss = median(rss), .groups = "drop") %>% filter(median_rss == min(median_rss))
+
+# paste0("The polynomial model with degree ", rss_summary2$degree[which.min(rss_summary2$median_rss)], " has the lowest mean of RSS of ", round(rss_summary2$median_rss[which.min(rss_summary2$median_rss)],2))
+
+opt_degree <- rss_summary2$degree[which.min(rss_summary2$median_rss)]
+
+
+
+```
+
+
+```{r test model on test data set (random), echo=FALSE}
+
+# recreate the model with the optimal polynomial degree and predict function for the test set!
+model <- lm(coal ~ poly(year, opt_degree), data = coal_df, subset = model_set_indices)
+res_valid <- predict(model, coal_df[test_set_indices,])
+rss <- sum((res_valid - coal_df$coal[test_set_indices])^2)
+
+
+# visualization
+
+y_predicted <- predict(model, coal_df)
+predicted_data <- data.frame(year = year, predicted = y_predicted)
+
+
+ggplot(coal_df[test_set_indices,], aes(x = year, y = coal)) +
+    geom_point(color = "blue") +   # Scatter plot
+    geom_line(data = predicted_data, aes(x = year, y = y_predicted), color = "red", size = 1.5) +     # Line properties
+    labs(title = "LM of optimal model with random test set", 
+        x = "year", y = "coal")
+
+```
+
+The RSS of the "optimal model" when model set and test set are selected randomly is `r rss` when tested on the test data set which is considerably lower than non-random selection method.
