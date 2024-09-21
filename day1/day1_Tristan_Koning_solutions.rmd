@@ -1,22 +1,176 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: 'Exercise_1 solution'
+date: 'Sept. 16th, 2024'
+author: 'Tristan Koning'
+output: pdf_document
 ---
 
-The [R plugin](https://www.jetbrains.com/help/pycharm/r-plugin-support.html) for IntelliJ-based IDEs provides
-handy capabilities to work with the [R Markdown](https://www.jetbrains.com/help/pycharm/r-markdown.html) files.
-To [add](https://www.jetbrains.com/help/pycharm/r-markdown.html#add-code-chunk) a new R chunk,
-position the caret at any line or the code chunk, then click "+".
-
-The code chunk appears:
 ```{r}
+library(ggplot2)
 ```
 
-Type any R code in the chunk, for example:
+# Problem 1
+
+## (a)
 ```{r}
-mycars <- within (mtcars, {cyl <- ordered (cyl)})
-mycars
+# Setup
+set.seed(1)
+n <- 15
+mu <- 4
+std_dev_x <- 4
+std_dev_err <- 2
+beta_0 <- 1
+beta_1 <- 2
+
+# Sample x and build y
+x <- rnorm(n = n, mean = mu, sd = std_dev_x^2)
+y <- beta_0 + beta_1 * x + rnorm(n = n, mean = 0, sd = std_dev_err^2)
+
+# Fit linear model
+model <- lm(y ~ x)
+summary(model)
+
+# Plot data
+df <- data.frame(x, y)
+ggplot(data = df, aes(x = x, y = y)) +
+  geom_point(size = 3) +
+  geom_abline(intercept = beta_0, slope = beta_1, color = "red", size = 1.5) +
+  geom_abline(intercept = coef(model)[1], slope = coef(model)[2], color = "blue", size = 1.5)
 ```
 
-Now, click the **Run** button on the chunk toolbar to [execute](https://www.jetbrains.com/help/pycharm/r-markdown.html#run-r-code) the chunk code. The result should be placed under the chunk.
-Click the **Knit and Open Document** to build and preview an output.
+The estimated slope and intercept are `r coef(model)[1]` and `r coef(model)[2]`, while the true values are `r beta_0` and `r beta_1`, respectively. We can see that the estimated line is close to the true line.
+
+## (b)
+```{r}
+# Setup
+r <- 1000
+
+simulation_df <- data.frame()
+
+for (i in 1:r) {
+  x_new <- sample(x = x, size = n, replace = TRUE)
+  y_new <- beta_0 + beta_1 * x_new + rnorm(n = n, mean = 0, sd = std_dev_err^2)
+
+  model <- lm(y_new ~ x_new)
+
+  simulation_df <- rbind(simulation_df, c(coef(model)[1], coef(model)[2]))
+}
+
+colnames(simulation_df) <- c("intercept", "slope")
+
+# Plot simulation results
+par(mfrow = c(2, 2))
+simulation_plot <- ggplot(data = df, aes(x = x, y = y)) +
+  geom_point()
+
+for (i in 1:nrow(simulation_df)) {
+  simulation_plot <- simulation_plot + geom_abline(intercept = simulation_df$intercept[i], slope = simulation_df$slope[i], color = "blue", size = 0.5, linetype = "dashed")
+}
+
+simulation_plot + geom_abline(intercept = beta_0, slope = beta_1, color = "red", size = 1.5)
+
+# Plot distribution of estimated intercept and slope
+beta_0_plot <- ggplot(data = simulation_df, aes(x = intercept)) +
+  geom_histogram(aes(y = ..density..), bins = 30) +
+  ggtitle("Distribution of Estimated Intercept")
+
+beta_0_plot + geom_vline(aes(xintercept = mean(intercept)), color = "red", size = 1.5)
+
+beta_1_plot <- ggplot(data = simulation_df, aes(x = slope)) +
+  geom_histogram(bins = 30) +
+  ggtitle("Distribution of Estimated Slope")
+
+beta_1_plot + geom_vline(aes(xintercept = mean(slope)), color = "red", size = 1.5)
+
+# Summary of distribution
+summary(simulation_df)
+```
+
+We can observe from the histograms as well as the mean and quartiles that the estimated values are very close to the true values (1 and 2, respectively).
+
+## (c)
+```{r}
+# Setup
+r <- 1000
+
+resample_simulation_df <- data.frame()
+
+for (i in 1:r) {
+  x_new <- rnorm(n = n, mean = mu, sd = std_dev_x^2)
+  y_new <- beta_0 + beta_1 * x_new + rnorm(n = n, mean = 0, sd = std_dev_err^2)
+
+  model <- lm(y_new ~ x_new)
+
+  resample_simulation_df <- rbind(resample_simulation_df, c(coef(model)[1], coef(model)[2]))
+}
+
+colnames(resample_simulation_df) <- c("intercept", "slope")
+
+# Plot simulation results
+resample_simulation_plot <- ggplot(data = df, aes(x = x, y = y)) +
+  geom_point()
+
+for (i in 1:nrow(resample_simulation_df)) {
+  resample_simulation_plot <- resample_simulation_plot + geom_abline(intercept = resample_simulation_df$intercept[i], slope = resample_simulation_df$slope[i], color = "blue", size = 0.5, linetype = "dashed")
+}
+
+resample_simulation_plot + geom_abline(intercept = beta_0, slope = beta_1, color = "red", size = 1.5)
+
+# Plot distribution of estimated intercept and slope
+beta_0_plot <- ggplot(data = resample_simulation_df, aes(x = intercept)) +
+  geom_histogram(aes(y = ..density..), bins = 30) +
+  ggtitle("Distribution of Estimated Intercept")
+
+beta_0_plot + geom_vline(aes(xintercept = mean(intercept)), color = "red", size = 1.5)
+
+beta_1_plot <- ggplot(data = resample_simulation_df, aes(x = slope)) +
+  geom_histogram(bins = 30) +
+  ggtitle("Distribution of Estimated Slope")
+
+beta_1_plot + geom_vline(aes(xintercept = mean(slope)), color = "red", size = 1.5)
+
+# Summary of distribution
+summary(resample_simulation_df)
+```
+
+In (b) we have applied a bootstrapping method while in (c) we have applied resampling. Th
+
+# Problem 2
+
+```{r}	
+# Load data
+require(fma)
+bicoal
+str(bicoal, strict.width = "cut")
+year <- c(time(bicoal))
+coal <- as.numeric(bicoal)
+coal_df <- data.frame(coal = coal, year = year)
+```
+
+## (a)
+```{r}
+# Setup
+set.seed(1)
+rss <- data.frame(matrix(nrow = 100, ncol = 8))
+par(mfrow = c(2, 4))
+
+for (degree in 1:8) {
+  # Plot points of data with x = year, y = coal and degree as title
+  plot(year, coal, main = paste("Degree", degree), xlab = "Year", ylab = "Coal")
+
+  for (i in 1:100) {
+    training_indices <- sort(sample(49, 38))
+    validation_indices <- setdiff(1:length(year), training_indices)
+
+    model <- lm(coal ~ poly(year, degree), data = coal_df, subset = training_indices)
+    prediction <- predict(model, newdata = coal_df[validation_indices, ])
+    rss[i, degree] <- sum((prediction - coal_df$coal[-training_indices])^2)
+
+    # Plot fitted line
+    lines(year, predict(model, newdata = coal_df))
+  }
+}
+
+rss_median <- apply(rss, 2, median)
+which.min(rss_median)
+```	
