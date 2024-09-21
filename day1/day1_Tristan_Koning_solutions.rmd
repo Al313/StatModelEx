@@ -133,7 +133,11 @@ beta_1_plot + geom_vline(aes(xintercept = mean(slope)), color = "red", size = 1.
 summary(resample_simulation_df)
 ```
 
-In (b) we have applied a bootstrapping method while in (c) we have applied resampling. Th
+In (b) we have applied a bootstrapping method while in (c) we have applied resampling. 
+Looking at the graphs and the summary statistics, we notice that both methods yield results which are very close to the true parameters. 
+However, Bootstrapping seems to be slightly more accurate.
+Given that we have a large number of simulations (1000), this is not surprising. If it were a smaller number, bootstrapping would likely be a lot less accurate due to the small sample sizes per simulation (15).
+
 
 # Problem 2
 
@@ -166,11 +170,55 @@ for (degree in 1:8) {
     prediction <- predict(model, newdata = coal_df[validation_indices, ])
     rss[i, degree] <- sum((prediction - coal_df$coal[-training_indices])^2)
 
-    # Plot fitted line
-    lines(year, predict(model, newdata = coal_df))
+    # Plot model
+    lines(year[training_indices], model$fitted.values)
   }
 }
 
 rss_median <- apply(rss, 2, median)
 which.min(rss_median)
+rss_median[which.min(rss_median)]
 ```	
+
+We can observe that a model with degree 7 has the lowest median RSS, therefore we choose this model.
+
+(b)
+```{r}
+# Reserve first and last five years as a test set, training set = 26, validation set = 10
+set.seed(1)
+test_indices = c(1:5, 45:49)
+rss <- data.frame(matrix(nrow = 100, ncol = 8))
+par(mfrow = c(2, 4))
+
+for (degree in 1:8) {
+  # Plot points of data with x = year, y = coal and degree as title
+  plot(year, coal, main = paste("Degree", degree), xlab = "Year", ylab = "Coal")
+
+  for (i in 1:100) {
+    training_indices <- sort(sample(40, 26))
+    validation_indices <- setdiff(1:40, training_indices)
+
+    model <- lm(coal ~ poly(year, degree), data = coal_df, subset = training_indices)
+    prediction <- predict(model, newdata = coal_df[test_indices, ])
+    rss[i, degree] <- sum((prediction - coal_df$coal[test_indices])^2)
+
+    # Plot fitted line
+    lines(year[training_indices], model$fitted.values)
+  }
+}
+
+rss_median <- apply(rss, 2, median)
+model_nr <- which.min(rss_median)
+
+# Predict test set with best model
+model <- lm(coal ~ poly(year, model_nr), data = coal_df, subset = test_indices)
+prediction <- predict(model, newdata = coal_df[test_indices, ])
+
+test_rss <- sum((prediction - coal_df$coal[test_indices])^2)
+test_rss
+prediction
+coal_df[test_indices, ]
+```	
+
+The new optimal model has degree 1 according to the rss metric.
+However, looking at the true values and the predicted values, we can see that the model is not very accurate and that the rss is quite high on the test set.
