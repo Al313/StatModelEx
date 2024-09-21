@@ -213,47 +213,44 @@ coal_df <- data.frame(coal = coal, year = year)
 
 ## A)
 
-```{r 2.a}
-
-# generate plot of fitted polynomial line with degrees between 1-8
-#pdf("/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/day1/figs/polynomial.pdf", width = 21, height = 14)
-par(mfrow=c(2,4))
-for (i in seq(1, 8, by=1)) {
-    model <- lm(coal ~ poly(year, i), data = coal_df)
-    plot(year, coal, pch=20, main = paste0("degree of poly: ", i))
-    lines(year, model$fitted.values, col ="red")
-}
-dev.off()
-
-
-```
-
 
 
 ```{r 2.a.1}
 
 # set paramters
 degrees <- 1:8
-k_folds <- 5
+
 
 # set computer seed for reproducibility
-set.seed(4)
+set.seed(2)
 
 
 # calculate and store rss values
 
 rss_df <- data.frame()
 
-for (i in 1:100){
-    fold_indices <- sample(rep(1:k_folds, length.out = nrow(coal_df)))
-    for (j in degrees){
-        training_indices <- which(fold_indices != 1)
-        model <- lm(coal ~ poly(year, j), data = coal_df, subset = training_indices)
-        res_valid <- predict(model, coal_df[-training_indices, ])
-        rss <- sum((res_valid - coal_df$coal[-training_indices])^2)
-        rss_df <- rbind(rss_df, c(i, j, rss))
-    }
+
+
+par(mfrow = c(2, 4))
+
+for (degree in 1:8) {
+  # Plot points of data with x = year, y = coal and degree as title
+  plot(year, coal, main = paste("Degree", degree), xlab = "Year", ylab = "Coal")
+
+  for (i in 1:100) {
+    training_indices <- sort(sample(49, 38))
+    validation_indices <- setdiff(1:length(year), training_indices)
+
+    model <- lm(coal ~ poly(year, degree), data = coal_df, subset = training_indices)
+    prediction <- predict(model, newdata = coal_df[validation_indices, ])
+    rss <- sum((prediction - coal_df$coal[-training_indices])^2)
+    rss_df <- rbind(rss_df, c(i, degree, rss)) 
+
+    # Plot model
+    lines(year[training_indices], model$fitted.values, col = "red")
+  }
 }
+
 
 
 colnames(rss_df) <- c("rep", "degree", "rss")
@@ -275,6 +272,8 @@ we are reserving the first and last 5 years present in the data for the test set
 
 
 ```{r 2.b}
+
+set.seed(1)
 
 # reserve test set
 test_set_indices <- c(1:5, (nrow(coal_df)-4):nrow(coal_df))
