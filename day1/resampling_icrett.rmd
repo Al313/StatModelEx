@@ -1,6 +1,8 @@
 ---
 title: "Resampling and Regression Analysis"
+author: "Isabelle Caroline Rose Cretton"
 output: pdf_document
+
 ---
 
 ```{r setup, include=FALSE}
@@ -126,7 +128,7 @@ coal <- as.numeric(bicoal)
 coal_df <- data.frame(coal = coal, year = year)
 
 # Set seed for reproducibility
-set.seed(123)
+set.seed(111)
 
 # Define the number of iterations and degrees
 iterations <- 100
@@ -140,7 +142,8 @@ for (degree in degrees) {
   rss_list <- numeric(iterations)  # Store RSS values for each iteration
 
   # Plot initialization for each degree
-  plot(NULL, xlim = range(year), ylim = range(coal), main = sprintf("Fits for Polynomial Degree %d", degree),
+  plot(NULL, xlim = range(year), ylim = range(coal), 
+       main = sprintf("Fits for Polynomial Degree %d", degree),
        xlab = "Year", ylab = "Coal Production", type = 'n')
 
   for (i in 1:iterations) {
@@ -151,6 +154,8 @@ for (degree in degrees) {
 
     # Fit polynomial model
     model <- lm(coal ~ poly(year, degree), data = train_data)
+    
+    # Predict on validation set and calculate RSS
     predictions <- predict(model, newdata = valid_data)
     rss_list[i] <- sum((valid_data$coal - predictions)^2)
 
@@ -173,6 +178,52 @@ The polynomial fits for degrees 1 to 8 indicate varying levels of model complexi
 
 Part (b): Cross-validation w/ best degree selection
 ```{r}
-# TODO: finish this part
-````
+# define the test indices (first and last 5 years)
+test_indices <- c(1:5, (length(year) - 4):length(year))
 
+# define the remaining indices for training and validation
+remaining_indices <- setdiff(1:nrow(coal_df), test_indices)
+
+# prep variables to store RSS results
+degrees <- 1:8
+rss_list <- matrix(NA, nrow = 100, ncol = length(degrees))
+
+# perform repeated subsetting and fitting for training and validation (cross-validation)
+for (degree in degrees) {
+  for (i in 1:100) {
+    # split remaining indices into training (26) and validation (10)
+    train_indices <- sample(remaining_indices, size = 26)
+    valid_indices <- setdiff(remaining_indices, train_indices)
+  
+    # fit polynomial model on training set
+    model <- lm(coal ~ poly(year, degree), data = coal_df, subset = train_indices)
+    
+    # predict on validation set and calculate RSS
+    predictions <- predict(model, newdata = coal_df[valid_indices, ])
+    rss_list[i, degree] <- sum((coal_df$coal[valid_indices] - predictions)^2)
+  }
+}
+
+# compute median (!!!) RSS for each degree
+rss_median <- apply(rss_list, 2, median)
+best_degree <- which.min(rss_median)
+cat("Best model degree based on validation RSS:", best_degree, "\n")
+
+# fit the best model to the entire remaining training data
+best_model <- lm(coal ~ poly(year, best_degree), data = coal_df, subset = remaining_indices)
+
+# predict on the test set
+test_predictions <- predict(best_model, newdata = coal_df[test_indices, ])
+
+# compute RSS on the test set
+test_rss <- sum((coal_df$coal[test_indices] - test_predictions)^2)
+cat("Test RSS for the best model (degree", best_degree, "):", test_rss, "\n")
+
+# compare predicted and actual values for the test set
+test_results <- data.frame(Year = coal_df$year[test_indices], 
+                           Actual = coal_df$coal[test_indices], 
+                           Predicted = test_predictions)
+print(test_results)
+````
+According to this, the best model degree is 8 based on the median RSS. 
+While the degree 8 polynomial model was optimal based on the training and validation sets, it appears to overfit the data when applied to the test set, especially for the later years. The model captures too much complexity (likely fitting noise), which leads to large prediction errors for the last 5 test years.
