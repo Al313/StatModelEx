@@ -16,14 +16,18 @@ Load from https://user.math.uzh.ch/furrer/download/sta121/ the following data se
 ```{r}
 # Load the data sets
 # 1. elephant.csv
-elephant <- read.table(file = "day2/data/elephant.csv")
+elephant <- read.table(file = "day2/data/elephant.csv", header = TRUE, sep = ",")
 # 2. Meatprice.txt
-meatprice <- read.table("day2/data/Meatprice.txt")
+meatprice <- read.table("day2/data/Meatprice.txt", header = TRUE, sep = "\t")
 ```
 
 ```{r}
 View(elephant)
 #View(meatprice)
+```
+
+```{r}
+View(meatprice)
 ```
 
 Have a look at the data, e.g. View(dataset) or head(dataset), plotting -> to see if reading the data worked properly.
