@@ -9,55 +9,82 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# 1. Data loading:
-Load from https://user.math.uzh.ch/furrer/download/sta121/ the following data sets:
-- elephant.csv
-- Meatprice.txt
 ```{r}
-# Load the data sets
-# 1. elephant.csv
-elephant <- read.table(file = "day2/data/elephant.csv", header = TRUE, sep = ",")
-# 2. Meatprice.txt
-meatprice <- read.table("day2/data/Meatprice.txt", header = TRUE, sep = "\t")
-```
-
-```{r}
-View(elephant)
-#View(meatprice)
-```
-
-```{r}
-View(meatprice)
-```
-
-Have a look at the data, e.g. View(dataset) or head(dataset), plotting -> to see if reading the data worked properly.
-
-Rdata   
-https://user.math.uzh.ch/furrer/download/sta121/
-Penguins.RData
-
-```{r}
-# "./data/Penguins.RData"
+library(tidyverse)
+library(ggplot2)
 
 ```
 
-
-# 2. Working with data frames
-
-Dataset Seatbelts is available in R from the package datasets. 
-You should have access to this data set without loading.
-Use ?Seatbelts to read about the dataset. 
-First we will change the data set to be a data frame (not a Time series), see the code. 
+# Problem 1: PCA on the protein data
+# part a
 ```{r}
-library(datasets)
-Seatbelts_df <- data.frame(as.matrix(Seatbelts), date=time(Seatbelts)) 
-View(Seatbelts_df)
+# Load the data
+protein <- read.csv("day2/protein.txt", sep = "\t", header = TRUE)
 
-# convert Time Series to data frame so that we can work with that
+# Set the row names and remove country column from analysis
+rownames(protein) <- protein[,1]
+protein <- protein[,-1]
 
+# Perform PCA
+pca <- prcomp(protein, scale = TRUE)
+
+# Summary of PCA to check proportion of variance explained
+summary(pca)
+
+# Scree plot to visualize the proportion of variance explained by each principal component
+screeplot(pca, type = "lines", main = "Scree Plot")
+
+# Biplot to visualize the relationship between countries and variables in the first two PCs
+biplot(pca, main = "PCA Biplot for Protein Data")
+
+# Create a data frame for the first two principal components
+pca_df <- as.data.frame(pca$x)
+pca_df$Country <- rownames(pca_df)
+pca_df <- pca_df %>%
+  rename(PC1 = PC1, PC2 = PC2)
+
+# Plot the first two principal components
+pca_plot <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
+  geom_point() +
+  geom_text(aes(label = Country), hjust = 0, vjust = 0) +
+  labs(title = "PCA on Protein Data",
+       x = "Principal Component 1",
+       y = "Principal Component 2") +
+  theme_minimal()
+
+# Display the plot
+print(pca_plot)
 ```
-1. Add a column representing the ratio of rear passengers killed to front passengers killed
+
 ```{r}
+# Biplot to visualize both country scores and variable loadings for PC1 and PC2
+biplot(pca, main = "PCA Biplot for Protein Data")
 ```
+# todo: add interpretation of the biplot
 
+# part b
+```{r}
+# Scree plot to visualize the proportion of variance explained by each principal component
+screeplot(pca, type = "lines", main = "Scree Plot")
 
+# You can also plot the explained variance using ggplot
+explained_variance <- pca$sdev^2 / sum(pca$sdev^2) * 100
+explained_df <- data.frame(PC = seq(1, length(explained_variance)),
+                           Variance = explained_variance)
+
+ggplot(explained_df, aes(x = PC, y = Variance)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Scree Plot", x = "Principal Component", y = "Variance Explained (%)") +
+  theme_minimal()
+```
+The scree plot shows a steep decline in variance explained by the first few components, with the most substantial drop-off occurring after the second principal component. This indicates that the first two components capture the majority of the variance, and the additional components contribute relatively smaller amounts of explained variance. The "elbow" in the plot suggests that retaining around four components is a reasonable choice to capture the majority of the information in the dataset
+
+```{r}
+# Summary of PCA to check the proportion of variance explained by each component
+pca_summary <- summary(pca)
+
+# Print the summary to the console
+print(pca_summary)
+```
+Based on the summary data, we could retain 4 to 5 components. Four components already explain a significant portion of the variance (85.82%), but including the fifth component would bring the explained variance just over 90%. This decision would depend on the specific goals of the analysis and the trade-off between complexity and explanatory power.
