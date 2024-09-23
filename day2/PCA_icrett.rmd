@@ -1,0 +1,59 @@
+---
+title: "02PCA ex STA121"
+author: "Isabelle Caroline Rose Cretton"
+date: "September 27, 2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Data loading:
+Load from https://user.math.uzh.ch/furrer/download/sta121/ the following data sets:
+- elephant.csv
+- Meatprice.txt
+```{r}
+# Load the data sets
+# 1. elephant.csv
+elephant <- read.table(file = "day2/data/elephant.csv")
+# 2. Meatprice.txt
+meatprice <- read.table("day2/data/Meatprice.txt")
+```
+
+```{r}
+View(elephant)
+#View(meatprice)
+```
+
+Have a look at the data, e.g. View(dataset) or head(dataset), plotting -> to see if reading the data worked properly.
+
+Rdata   
+https://user.math.uzh.ch/furrer/download/sta121/
+Penguins.RData
+
+```{r}
+# "./data/Penguins.RData"
+
+```
+
+
+# 2. Working with data frames
+
+Dataset Seatbelts is available in R from the package datasets. 
+You should have access to this data set without loading.
+Use ?Seatbelts to read about the dataset. 
+First we will change the data set to be a data frame (not a Time series), see the code. 
+```{r}
+library(datasets)
+Seatbelts_df <- data.frame(as.matrix(Seatbelts), date=time(Seatbelts)) 
+View(Seatbelts_df)
+
+# convert Time Series to data frame so that we can work with that
+
+```
+1. Add a column representing the ratio of rear passengers killed to front passengers killed
+```{r}
+```
+
+
