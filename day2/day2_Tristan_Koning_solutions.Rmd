@@ -1,0 +1,219 @@
+---
+title: 'Exercise_1 solution'
+date: 'Sept. 16th, 2024'
+author: 'Tristan Koning'
+output: pdf_document
+---
+
+```{r}
+install.packages("ggrepel")
+install.packages("ggplot2")
+install.packages("ggbiplot")
+library(ggplot2)
+library(ggrepel)
+library(ggbiplot)
+```
+
+# Problem 1
+
+## (a)
+
+```{r}
+# Setup
+data <-  read.csv("day2/protein.txt", sep = "\t", header = TRUE)
+
+# Perform PCA on data, except country names
+pca <- prcomp(data[, -1], scale = TRUE)
+
+# Variance explained by each PC
+screeplot(pca)
+round(cumsum(pca$sdev^2 / sum(pca$sdev^2)), 3)
+
+# Get loadings of PC
+loadings <- pca$rotation
+loadings_data <- data.frame(Variable = rownames(loadings), PC1 = loadings[, 1], PC2 = loadings[, 2])
+
+# Perform Dimensionality reduction
+scores <- pca$x
+pca_data <- data.frame(Country = data$Country, PC1 = scores[, 1], PC2 = scores[, 2])
+
+ggplot() + 
+  geom_point(data = pca_data, aes(x = PC1, y = PC2)) + 
+  geom_text_repel(data = pca_data, aes(x = PC1, y = PC2, label = Country)) +
+  geom_segment(data = loadings_data, aes(x = 0, y = 0, xend = PC1, yend = PC2),
+               arrow = arrow(length = unit(0.3, "cm")), color = "red") +
+  geom_text_repel(data = loadings_data, aes(x = PC1, y = PC2, label = Variable), color = "red") +
+  labs(title = "PCA Biplot of Protein Data", x = "PC1", y = "PC2") +
+  theme_minimal()
+```
+
+Looking at the Biplot of the PCA together with its Loadings, we can observe that Eastern European Countries consume their protein more along PC1, which primarily includes Nuts and Cereals.
+On the other Hand, Western European and Scandinavian Countries consume their protein via Meat, Eggs and Milk.
+Mediterranean Latin Countries such as Portugal, Spain and Greece consume theirs along both PC1 and 2, which includs Fruites, Vegetables and Fish additionally to what has already been mentioned along PC1.
+
+## (b)
+PC1 seems to distinguish between plant-based proteins and animal-based proteins. PC2 strongly emphasizes Fish, Fruits and Vegetables and PC3 shows Consumption of White Meat, Fruits and Vegetables. Starting with Pc4 it gets harder and harder to individuate what each component represents.
+
+
+# Problem 2
+
+## (a)
+
+```{r}
+# Setup
+require(maps)
+require(fields)
+load("day2/prec_jan_feb.RData")
+
+```
+
+```{r}
+# Plot maps of Jamuary 1st
+image.plot(lon, lat, pre[, , 1, main = "January 1st, 00:00"])
+map("world", add = TRUE)
+image.plot(lon, lat, pre[, , 2], main = "January 1st, 06:00")
+map("world", add = TRUE)
+image.plot(lon, lat, pre[, , 3,  main = "January 1st, 12:00"])
+map("world", add = TRUE)
+image.plot(lon, lat, pre[, , 4], main = "January 1st, 18:00")
+map("world", add = TRUE)
+```
+
+```{r}
+# Plot mean and variance
+image.plot(lon, lat, apply(pre, c(1, 2), mean), main = "Mean")
+map("world", add = TRUE)
+
+image.plot(lon, lat, apply(pre, c(1, 2), var), main = "Variance")
+map("world", add = TRUE)
+```
+
+## (b)
+
+```{r}
+# Data matrix: 31 x 19 spatial locations, 240 observations
+pre2 <- t(array(pre, c(dim(pre)[1] * dim(pre)[2], dim(pre)[3])))
+
+# Perform PCA
+pca <- prcomp(pre2, scale = TRUE)
+
+# Variance explained by each PC
+screeplot(pca)
+round(cumsum(pca$sdev^2 / sum(pca$sdev^2)), 3)
+
+# Get loadings of top 6 PCs that explain the most variance
+loadings <- pca$rotation[, 1:6]
+
+# Plot for each loading
+par(mfrow = c(2, 3))
+for (i in 1:6) {
+  image.plot(lon, lat, matrix(loadings[, i], nrow = 31), main = paste("PC", i))
+  map("world", add = TRUE)
+}
+```
+
+## (c)
+
+```{r}
+# Calculate Eigenvalues from sdev
+eigenvalues <- pca$sdev^2
+
+# Display Eigenvalues
+par(mfrow = c(1, 1))
+barplot(eigenvalues, main = "Eigenvalues", xlab = "PC", ylab = "Eigenvalue")
+```
+
+## (d)
+
+```{r}
+# Setup
+n <- 240
+
+for (i in 1:(length(eigenvalues) - 1)) {
+  if ((eigenvalues[i] - eigenvalues[i+1]) / eigenvalues[i] < sqrt(2 / n)) {
+    num_components <- i
+    break
+  }
+}
+
+# Show results
+num_components
+screeplot(pca[1:num_components])
+round(cumsum(pca$sdev^2 / sum(pca$sdev^2)), 3)[1:num_components]
+```
+
+We truncated at 7 components, which results in 50.1% of the variance explained.
+
+# Problem 3
+
+## (a)
+
+```{r}
+# Setup
+mu <- c(2, 5)
+sigma <- matrix(c(1, 0.5, 0.5, 1), nrow = 2)
+
+# Perform Eigendecomposition
+eig <- eigen(sigma)
+```
+
+Eigenvalues: `r eig$values`
+Eigenvectors: `r eig$vectors`
+
+## (b)
+
+```{r}
+# Setup
+n <- 100
+set.seed(123)
+
+# Draw from multivariate normal
+sample <- rmvnorm(n = n, mean = mu, sigma = sigma)
+
+# Plot samples
+data <- data.frame(x = sample[, 1], y = sample[, 2])
+ggplot(data = data, aes(x = x, y = y)) +
+  geom_point() +
+  labs(title = "Samples from Multivariate Normal Distribution")
+```
+
+## (c)
+
+```{r}
+# Setup eigenvectors to ensure they start at the mean of the distribution
+eig_data <- data.frame(
+  x = c(2, 2),
+  y = c(5, 5),
+  xend = 2 + eig$vectors[, 1],
+  yend = 5 + eig$vectors[, 2]
+)
+
+# Plot with Eigenvectors
+ggplot(data = data, aes(x = x, y = y)) +
+  geom_point() +
+  labs(title = "Samples from Multivariate Normal Distribution") +
+  geom_segment(data = eig_data, aes(x = x, y = y, xend = xend, yend = yend), arrow = arrow(length = unit(0.3, "cm")), color = "red")
+```
+
+## (d)
+
+```{r}
+# Perform PCA on sample
+pca <- prcomp(sample, scale = TRUE)
+
+eigenvalues_sample <- pca$sdev^2
+
+# Display rotated points
+rotated_points <- pca$x
+rotated_data <- data.frame(x = rotated_points[, 1], y = rotated_points[, 2])
+ggplot(data = rotated_data, aes(x = x, y = y)) +
+  geom_point() +
+  labs(title = "Rotated Points from PCA")
+```
+
+Original Eigenvalues: `r eig$values`
+Sample Eigenvalues: `r eigenvalues_sample`
+
+They are not exactly the same since we are dealing with a random sample.
+This means that we will have some small variations in the data that will influence the eigenvalues. 
+We can still observe that the sample eigenvalues are close to the original eigenvalues.
