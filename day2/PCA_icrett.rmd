@@ -10,81 +10,358 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-library(tidyverse)
 library(ggplot2)
-
+library(dplyr)
+#install.packages("ggbiplot")
+library(ggbiplot)
+#install.packages("fields")
+library(fields)  # for image.plot()
+#install.packages("maps")
+library(maps)    # for adding world borders
+#install.packages("reshape2")
+library(reshape2)
 ```
 
 # Problem 1: PCA on the protein data
 # part a
 ```{r}
-# Load the data
+# Load the protein dataset
 protein <- read.csv("day2/protein.txt", sep = "\t", header = TRUE)
 
-# Set the row names and remove country column from analysis
-rownames(protein) <- protein[,1]
+# Set row names and remove the country column
+rownames(protein) <- protein$Country
 protein <- protein[,-1]
 
 # Perform PCA
-pca <- prcomp(protein, scale = TRUE)
+pca <- prcomp(protein, scale. = TRUE)
 
-# Summary of PCA to check proportion of variance explained
-summary(pca)
-
-# Scree plot to visualize the proportion of variance explained by each principal component
-screeplot(pca, type = "lines", main = "Scree Plot")
-
-# Biplot to visualize the relationship between countries and variables in the first two PCs
-biplot(pca, main = "PCA Biplot for Protein Data")
-
-# Create a data frame for the first two principal components
-pca_df <- as.data.frame(pca$x)
-pca_df$Country <- rownames(pca_df)
-pca_df <- pca_df %>%
-  rename(PC1 = PC1, PC2 = PC2)
-
-# Plot the first two principal components
-pca_plot <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
-  geom_point() +
-  geom_text(aes(label = Country), hjust = 0, vjust = 0) +
-  labs(title = "PCA on Protein Data",
-       x = "Principal Component 1",
-       y = "Principal Component 2") +
-  theme_minimal()
-
-# Display the plot
-print(pca_plot)
-```
-
-```{r}
-# Biplot to visualize both country scores and variable loadings for PC1 and PC2
-biplot(pca, main = "PCA Biplot for Protein Data")
-```
-# todo: add interpretation of the biplot
-
-# part b
-```{r}
-# Scree plot to visualize the proportion of variance explained by each principal component
-screeplot(pca, type = "lines", main = "Scree Plot")
-
-# You can also plot the explained variance using ggplot
-explained_variance <- pca$sdev^2 / sum(pca$sdev^2) * 100
-explained_df <- data.frame(PC = seq(1, length(explained_variance)),
-                           Variance = explained_variance)
-
-ggplot(explained_df, aes(x = PC, y = Variance)) +
-  geom_line() +
-  geom_point() +
-  labs(title = "Scree Plot", x = "Principal Component", y = "Variance Explained (%)") +
-  theme_minimal()
-```
-The scree plot shows a steep decline in variance explained by the first few components, with the most substantial drop-off occurring after the second principal component. This indicates that the first two components capture the majority of the variance, and the additional components contribute relatively smaller amounts of explained variance. The "elbow" in the plot suggests that retaining around four components is a reasonable choice to capture the majority of the information in the dataset
-
-```{r}
-# Summary of PCA to check the proportion of variance explained by each component
+# Summary of PCA to check variance explained
 pca_summary <- summary(pca)
-
-# Print the summary to the console
 print(pca_summary)
 ```
-Based on the summary data, we could retain 4 to 5 components. Four components already explain a significant portion of the variance (85.82%), but including the fifth component would bring the explained variance just over 90%. This decision would depend on the specific goals of the analysis and the trade-off between complexity and explanatory power.
+PC1 is the most important component, capturing 44.52% of the variance. This suggests that a large portion of the variability in protein consumption across the countries can be explained by a single underlying factor (likely related to major dietary differences, such as fish and cereal consumption patterns).
+PC2 captures an additional 18.17%, indicating it adds another dimension to understanding the variation in the data.
+PC3 and PC4 contribute further, and collectively, the first four components explain about 85.82% of the total variance in the data. This implies that using these four components, we can represent the majority of the structure in the data while keeping complexity manageable.
+
+## Scree plot
+```{r}
+# Scree plot for the variance explained by each component
+screeplot(pca, type = "lines", main = "Scree Plot")
+```
+The elbow rule suggests that after PC2 or PC3, the variance explained by each successive component decreases significantly.
+
+## Biplot
+```{r}
+ggbiplot(pca, labels = rownames(protein), ellipse = TRUE, circle = TRUE) + 
+  ggtitle("PCA Biplot for Protein Data") + theme_minimal()
+```
+This biplot indicates that protein consumption patterns are geographically distinct across European countries, with certain countries having unique dietary habits (e.g., high fish consumption in Portugal and Spain, and high cereal consumption in Romania and Bulgaria). The plot also shows that Cereals, Fish, and Fr&Veg are the most influential food categories in shaping these differences.
+The x-axis (PC1) explains 44.5% of the total variance in the dataset, in turn, the y-axis (PC2) explains 25% of the variance.
+
+```{r}
+# Pairwise plot for the first four principal components
+pairs(pca$x[,1:4], labels = c("PC1", "PC2", "PC3", "PC4"), 
+      main = "Pairwise Plot of First Four Principal Components")
+```
+- PC1 vs. PC2: Shows some separation between countries, indicating these components capture the most significant differences in protein consumption patterns (e.g., high fish/fruit consumption vs. high cereal consumption).
+
+- PC1 vs. PC3, PC1 vs. PC4: Some spread but no strong clustering, suggesting that PC3 and PC4 capture more subtle or nuanced variations.
+
+- PC2 vs. PC3, PC2 vs. PC4: Similar to PC1, some spread but no clear group separation.
+
+- PC3 vs. PC4: Little visible structure or separation, indicating these components explain smaller or independent variations.
+
+## part b
+Given the high cumulative variance explained by the first 4 components, and diminishing returns from including more components, it would be reasonable to focus on the first 4 components for interpreting and understanding the data.
+Breakdown of what each component represents:
+- PC1 (44.52%): likely captures the general protein consumption pattern, with higher loadings on food groups such as Fish and Fr&Veg (Fruits & Vegetables). Countries like Portugal and Spain have high scores on PC1 due to higher fish consumption, while countries like Romania consume more cereals and have lower PC1 scores.
+
+- PC2 (18.17%): may reflect meat consumption patterns, particularly distinguishing countries that consume more Red Meat (like the UK and France) from those with lower consumption of these food groups.
+
+- PC3 (12.53%): could represent a trade-off between White Meat and Dairy (Milk) consumption, differentiating countries like Ireland and W Germany from those with lower dairy consumption.
+
+- PC4 (10.61%): might capture more specific dietary differences related to nuts, eggs, and starch, distinguishing countries like Greece and Hungary from others.
+
+# Problem 2: PCA on the precipitable water data
+```{r}
+# Load the RData file
+load("day2/prec_jan_feb.RData")
+
+# Check dimensions of the 'pre' array, should be c(31, 19, 240)
+dim(pre)
+
+# Reshape the data for the first four time slices (January 1st, 00:00 to 18:00)
+pre_melted <- melt(pre[, , 1:4])  # Melt the first 4 time points (00:00, 06:00, 12:00, 18:00)
+colnames(pre_melted) <- c("LongitudeIndex", "LatitudeIndex", "Time", "PrecipitableWater")
+
+# Create data frames for longitude and latitude
+lon_df <- data.frame(LongitudeIndex = 1:length(lon), Longitude = lon)
+lat_df <- data.frame(LatitudeIndex = 1:length(lat), Latitude = lat)
+
+# Merge longitude and latitude with the melted data
+pre_melted <- merge(pre_melted, lon_df, by = "LongitudeIndex")
+pre_melted <- merge(pre_melted, lat_df, by = "LatitudeIndex")
+
+# Update time labels for the four times on January 1st
+pre_melted$Time <- factor(pre_melted$Time, labels = c("00:00", "06:00", "12:00", "18:00"))
+
+# Plot with ggplot2
+ggplot(pre_melted, aes(x = Longitude, y = Latitude, fill = PrecipitableWater)) +
+  geom_raster() +
+  borders("world", colour = "black") +  # Add country borders
+  coord_fixed(xlim = c(-30, 50), ylim = c(30, 75)) +  # Focus on Europe (adjust limits)
+  scale_fill_viridis_c(option = "C", limits = c(min(pre_melted$PrecipitableWater), 
+                                                max(pre_melted$PrecipitableWater))) +  
+  facet_wrap(~ Time) +  # Facet by time
+  labs(title = "Precipitable Water on January 1st, 2000", fill = "Precipitable Water (mm)") +
+  theme_minimal() +  # Minimal theme for clarity
+  theme(
+    axis.title = element_blank(),       # Remove axis titles
+    strip.text = element_text(size = 12), # Larger facet titles
+    plot.title = element_text(hjust = 0.5, size = 16),  # Center and increase the size of the main title
+    legend.position = "right"           # Adjust legend position
+  )
+```
+
+```{r}
+# prepare to plot the mean and variance fields
+mean_field <- apply(pre, c(1, 2), mean)
+var_field <- apply(pre, c(1, 2), var)
+
+# reshape the mean and variance fields for ggplot2
+mean_melted <- melt(mean_field)
+var_melted <- melt(var_field)
+colnames(mean_melted) <- colnames(var_melted) <- c("LongitudeIndex", "LatitudeIndex", "Value")
+
+#create data frames for longitude and latitude
+lon_df <- data.frame(LongitudeIndex = 1:length(lon), Longitude = lon)
+lat_df <- data.frame(LatitudeIndex = 1:length(lat), Latitude = lat)
+
+# merge longitude and latitude with the melted mean and variance fields
+mean_melted <- merge(mean_melted, lon_df, by = "LongitudeIndex")
+mean_melted <- merge(mean_melted, lat_df, by = "LatitudeIndex")
+
+var_melted <- merge(var_melted, lon_df, by = "LongitudeIndex")
+var_melted <- merge(var_melted, lat_df, by = "LatitudeIndex")
+```
+
+```{r}
+# Plot the mean field
+mean_plot <- ggplot(mean_melted, aes(x = Longitude, y = Latitude, fill = Value)) +
+  geom_raster() +
+  borders("world", colour = "black") +  # Add country borders
+  coord_fixed(xlim = c(-30, 50), ylim = c(30, 75)) +  # Focus on Europe
+  scale_fill_viridis_c(option = "C", name = "Mean") +  # Color scale for mean
+  labs(title = "Mean Field of Precipitable Water Data") +
+  theme_minimal() +
+  theme(axis.title = element_blank(), plot.title = element_text(hjust = 0.5, size = 16))
+mean_plot
+```
+
+```{r}
+# Plot the variance field
+var_plot <- ggplot(var_melted, aes(x = Longitude, y = Latitude, fill = Value)) +
+  geom_raster() +
+  borders("world", colour = "black") +  # Add country borders
+  coord_fixed(xlim = c(-30, 50), ylim = c(30, 75)) +  # Focus on Europe
+  scale_fill_viridis_c(option = "C", name = "Variance") +  # Color scale for variance
+  labs(title = "Variance Field of Precipitable Water Data") +
+  theme_minimal() +
+  theme(axis.title = element_blank(), plot.title = element_text(hjust = 0.5, size = 16))
+var_plot
+```
+
+### part b
+```{r}
+# Flatten spatial dimensions (lon and lat) into one dimension
+pre_reshaped <- array_reshape(pre, c(31 * 19, 240))  # 31 (lon) * 19 (lat) by 240 (time)
+
+# Step 2: Perform PCA
+pca_pre <- prcomp(pre_reshaped, scale. = TRUE)  # PCA on the reshaped data
+
+# Step 3: Check how much variance is explained by each component
+pca_summary <- summary(pca_pre)
+print(pca_summary)
+```
+
+## plotting
+```{r}
+# The loadings for PC1 are stored in pca_pre$rotation[, 1] (First component's loadings)
+# Reshape PC1 loadings into spatial format (31 longitude x 19 latitude)
+pc1_map <- matrix(pca_pre$rotation[, 1], nrow = 31, ncol = 19)
+
+#Reshape the PC1 map for plotting with ggplot2
+pc1_melted <- melt(pc1_map)
+colnames(pc1_melted) <- c("LongitudeIndex", "LatitudeIndex", "PC1_Loading")
+
+# Create data frames for longitude and latitude
+lon_df <- data.frame(LongitudeIndex = 1:length(lon), Longitude = lon)
+lat_df <- data.frame(LatitudeIndex = 1:length(lat), Latitude = lat)
+
+#Merge longitude and latitude with the melted PC1 loadings
+pc1_melted <- merge(pc1_melted, lon_df, by = "LongitudeIndex")
+pc1_melted <- merge(pc1_melted, lat_df, by = "LatitudeIndex")
+
+#Check structure before plotting
+str(pc1_melted)  # Ensure that columns Longitude, Latitude, and PC1_Loading exist
+
+#Plot the first principal component map
+ggplot(pc1_melted, aes(x = Longitude, y = Latitude, fill = PC1_Loading)) +
+  geom_raster() +
+  geom_contour(aes(z = PC1_Loading), color = "white", alpha = 0.5) +  # Add contour lines for better distinction
+  borders("world", colour = "black") +  # Add country borders
+  coord_fixed(xlim = c(-30, 50), ylim = c(30, 75)) +  # Focus on Europe
+  scale_fill_viridis_c(option = "C", name = "PC1 Loading", limits = c(min(pc1_melted$PC1_Loading), max(pc1_melted$PC1_Loading))) +  # Tweak color range
+  labs(title = "First Principal Component (PC1) Loadings with Contours") +
+  theme_minimal() +
+  theme(axis.title = element_blank(), plot.title = element_text(hjust = 0.5, size = 16))
+```
+PC1 explains 58.37% of the total variability in the data. This is a very high proportion, indicating that the first principal component captures most of the variance in the data. The corresponding map of PC1 loadings reflects the most significant pattern of variability in precipitable water content across the region.
+
+## plotting PC2 and PC3
+```{r}
+# Step 1: Extract the second and third principal component (PC2, PC3) loadings
+pc2_map <- matrix(pca_pre$rotation[, 2], nrow = 31, ncol = 19)  # Reshape PC2 loadings into spatial format
+pc3_map <- matrix(pca_pre$rotation[, 3], nrow = 31, ncol = 19)  # Reshape PC3 loadings into spatial format
+
+# Step 2: Reshape the PC2 and PC3 maps for ggplot2
+pc2_melted <- melt(pc2_map)
+colnames(pc2_melted) <- c("LongitudeIndex", "LatitudeIndex", "PC2_Loading")
+
+pc3_melted <- melt(pc3_map)
+colnames(pc3_melted) <- c("LongitudeIndex", "LatitudeIndex", "PC3_Loading")
+
+# Step 3: Merge longitude and latitude with the melted PC2 and PC3 loadings
+pc2_melted <- merge(pc2_melted, lon_df, by = "LongitudeIndex")
+pc2_melted <- merge(pc2_melted, lat_df, by = "LatitudeIndex")
+
+pc3_melted <- merge(pc3_melted, lon_df, by = "LongitudeIndex")
+pc3_melted <- merge(pc3_melted, lat_df, by = "LatitudeIndex")
+```
+
+### plotting PC2
+```{r}
+ggplot(pc2_melted, aes(x = Longitude, y = Latitude, fill = PC2_Loading)) +
+  geom_raster() +
+  geom_contour(aes(z = PC2_Loading), color = "white", alpha = 0.5) +  # Add contour lines for better distinction
+  borders("world", colour = "black") +  # Add country borders
+  coord_fixed(xlim = c(-30, 50), ylim = c(30, 75)) +  # Focus on Europe
+  scale_fill_viridis_c(option = "C", name = "PC2 Loading") +  # Color scale for PC2 loadings
+  labs(title = "Second Principal Component (PC2) Loadings") +
+  theme_minimal() +
+  theme(axis.title = element_blank(), plot.title = element_text(hjust = 0.5, size = 16))
+```
+
+### plotting PC3
+```{r}
+ggplot(pc3_melted, aes(x = Longitude, y = Latitude, fill = PC3_Loading)) +
+  geom_raster() +
+  geom_contour(aes(z = PC3_Loading), color = "white", alpha = 0.5) +  # Add contour lines for better distinction
+  borders("world", colour = "black") +  # Add country borders
+  coord_fixed(xlim = c(-30, 50), ylim = c(30, 75)) +  # Focus on Europe
+  scale_fill_viridis_c(option = "C", name = "PC3 Loading") +  # Color scale for PC3 loadings
+  labs(title = "Third Principal Component (PC3) Loadings") +
+  theme_minimal() +
+  theme(axis.title = element_blank(), plot.title = element_text(hjust = 0.5, size = 16))
+```
+PC2 and PC3 provide more nuanced spatial patterns than PC1, each revealing specific types of variability that are not captured by the dominant PC1. While PC1 mostly captured the overall variance across Europe, PC2 and PC3 are picking up more regional and localized patterns.
+The horizontal striations in PC2 suggest the importance of large-scale atmospheric patterns, whereas PC3’s localized features may reflect the influence of more regional weather systems or topography.
+
+## Plotting PC1 & PC2, and PC1, PC2 & PC3
+```{r}
+# Combine the first three principal components' scores into a data frame
+pc_scores <- as.data.frame(pca_pre$x[, 1:3])  # Extract PC1, PC2, PC3 scores
+colnames(pc_scores) <- c("PC1", "PC2", "PC3")  # Rename columns
+
+# Pairwise plot for PC1 and PC2
+pairs(pc_scores[, 1:2],  # PC1 and PC2 only
+      labels = c("PC1", "PC2"), 
+      main = "Pairwise Plot of PC1 and PC2",
+      col = "blue", pch = 16)
+
+# Pairwise plot for PC1, PC2, and PC3
+pairs(pc_scores,  # PC1, PC2, PC3 together
+      labels = c("PC1", "PC2", "PC3"), 
+      main = "Pairwise Plot of PC1, PC2, and PC3",
+      col = "blue", pch = 16)
+```
+The pairwise plot of PC1, PC2, and PC3 reveals distinct patterns of variability captured by each principal component. While PC1 shows the most concentrated clustering, the relationships between PC2 and PC3 suggest more dispersed and orthogonal variability, indicating that each component adds unique dimensions to the data's structure.
+
+## part c
+```{r}
+eigenvalues <- pca$sdev^2
+
+par(mfrow = c(1, 1))  # Ensure single plot layout
+
+# Create a bar plot and store the bar positions
+bar_positions <- barplot(
+  eigenvalues, 
+  main = "Eigenvalues of Principal Components", 
+  xlab = "Principal Component", 
+  ylab = "Eigenvalue",
+  col = "lightblue",  # Use a distinct color for bars
+  border = "black",   # Black border around bars
+  ylim = c(0, max(eigenvalues) * 1.1)  # Add some space at the top for labels
+)
+
+#Add eigenvalue labels on top of each bar
+text(
+  bar_positions, 
+  eigenvalues, 
+  labels = round(eigenvalues, 2),  # Round to 2 decimal places
+  pos = 3,  # Position the text above the bars
+  cex = 0.8,  # Text size
+  col = "black"  # Text color
+)
+#Add axis labels with integer principal component indices
+axis(1, at = bar_positions, labels = 1:length(eigenvalues), las = 2)  # X-axis labels
+```
+
+```{r}
+plot(cumulative_variance, type = "b", pch = 19, col = "darkgreen",
+     xlab = "Principal Component", ylab = "Cumulative Proportion of Variance Explained",
+     main = "Cumulative Variance Explained",
+     ylim = c(0, 1))
+abline(h = 0.9, col = "red", lty = 2)  # Reference line for 90% variance explained
+```
+Based on both plots, approximately 15 to 20 principal components are relevant, as they explain around 90% of the variance. After that point, the additional components contribute minimally to the overall variance, making them less important for the analysis.
+
+## part d
+```{r}
+n <- 240  # Total number of eigenvalues/observations
+
+num_components <- length(eigenvalues)  # Initialize with max components
+for (i in 1:(length(eigenvalues) - 1)) {
+  if ((eigenvalues[i] - eigenvalues[i+1]) / eigenvalues[i] < sqrt(2 / n)) {
+    num_components <- i
+    break
+  }
+}
+num_components
+```
+
+```{r}
+variance_explained <- eigenvalues / sum(eigenvalues)
+cumulative_variance_truncated <- round(cumsum(variance_explained)[1:num_components], 3)
+
+# Create a bar plot for the scree plot
+bar_positions <- barplot(
+  variance_explained[1:num_components], 
+  main = paste("Scree Plot (Truncated at", num_components, "PCs)"), 
+  xlab = "Principal Component", 
+  ylab = "Variance Explained",
+  col = "lightblue",  
+  border = "black",    
+  ylim = c(0, max(variance_explained) * 1.1)
+)
+
+# Add labels on top of each bar
+text(bar_positions, variance_explained[1:num_components], 
+     labels = round(variance_explained[1:num_components], 2), 
+     pos = 3, cex = 0.8, col = "black")
+
+# Print cumulative variance for the retained components
+print(cumulative_variance_truncated)
+```
+9 components are relevant based on the North et al. rule.
+
