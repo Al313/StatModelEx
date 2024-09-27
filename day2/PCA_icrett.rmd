@@ -365,3 +365,56 @@ print(cumulative_variance_truncated)
 ```
 9 components are relevant based on the North et al. rule.
 
+
+# Problem 3: PCA 
+```{r}
+# Load necessary library
+library(MASS)
+
+# Define the mean vector and covariance matrix
+mu <- c(2, 5)
+Sigma <- matrix(c(1, 1/2, 1/2, 1), nrow = 2)
+
+# Calculate eigenvalues and eigenvectors
+eigen_decomp <- eigen(Sigma)
+eigenvalues <- eigen_decomp$values
+eigenvectors <- eigen_decomp$vectors
+
+# Output the eigenvalues and eigenvectors
+print("Eigenvalues:")
+print(eigenvalues)
+print("Eigenvectors:")
+print(eigenvectors)
+```
+
+### part b
+```{r}
+set.seed(123)  # Set seed for reproducibility
+n <- 100
+data <- mvrnorm(n, mu, Sigma)
+
+# Create a scatter plot
+plot(data, main = "Scatter Plot of 100 Realizations", xlab = "X1", ylab = "X2", pch = 19, col = "blue")
+```
+
+### part c
+```{r}
+arrows(2, 5, 2 + eigenvectors[1, 1] * eigenvalues[1], 5 + eigenvectors[2, 1] * eigenvalues[1], 
+       col = "red", length = 0.1)
+arrows(2, 5, 2 + eigenvectors[1, 2] * eigenvalues[2], 5 + eigenvectors[2, 2] * eigenvalues[2], 
+       col = "green", length = 0.1)
+
+# Add a legend
+legend("topright", legend = c("Eigenvector 1", "Eigenvector 2"), col = c("red", "green"), lty = 1, bty = "n")
+```
+
+### part d
+```{r}
+pc_data <- scale(data) %*% eigenvectors  # Centering the data and projecting onto eigenvectors
+
+# Plot the rotated points
+plot(pc_data, main = "Principal Components", xlab = "PC1", ylab = "PC2", pch = 19, col = "purple")
+```
+#### Why eigenvalues in PCA not the same?
+Eigenvalues from PCA are scaled by the variance of the data.
+The eigenvalues of the covariance matrix represent variance in the direction of the eigenvectors.
