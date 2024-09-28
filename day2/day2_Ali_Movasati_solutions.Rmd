@@ -1,0 +1,347 @@
+---
+title:  
+    "Day2 exercise solutions"
+date: 
+    "Sept. 23rd, 2024"
+author:  
+    "Ali Movasati"  
+output:  
+    pdf_document
+---
+
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+```{r libraries}
+
+
+# load required libraries
+library(ggplot2)
+library(magrittr)
+library(dplyr)
+library(tibble)
+library(maps)
+library(fields)
+
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Problem 1
+
+
+```{r}
+
+# load the data and inspect it
+
+protein <- read.table("/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/day2/data/protein.txt", header = T, sep = "\t")
+
+str(protein)
+
+
+```
+
+## 1.A)
+
+```{r}
+
+# perfrom PCA and visualize the results
+
+## prepare the dataset
+protein %<>% column_to_rownames(var = "Country") %>%
+        as.matrix()
+
+
+## perform PCA
+pca <- prcomp(protein, scale=TRUE)
+
+
+str(pca, give.attr=FALSE)
+
+## plot the PCs and the amount of variation how much of them can explain in the data
+plot(pca)
+
+## How much variance is explained by the 1st, the 1st and 2nd, the 1st, 2nd and 3rd PCs. 
+# min(which(round(cumsum(pca$sdev^2)/sum( pca$sdev^2), 3)>= 0.75))
+
+
+## plot biplot
+par(mfcol=c(1,2))
+biplot(pca, scale = 0)
+
+## to plot other principal components, use, for example:
+biplot(pca, scale = 0, choices=c(3, 2))
+
+
+```
+
+### << Comments >>
+
+- We performed PCA to reduce the dimensionality of the data. Two first principal components (PCs) explain `r round(cumsum( pca$sdev^2)/sum( pca$sdev^2), 3)[2]` of variance in the data.
+When checking the loadings from the rotation matrix of the PCA object and visualize them along the PCA scores in a biplot,
+we can appreciate that the first PC is mainly influenced by Cereals and Nuts, while the second PC is influenced by
+Fish and vegetables. We can also see a nice clustering of the countries with similar socio-economic profiles together.
+
+
+
+## 1.B)
+
+
+```{r}
+
+
+```
+
+### << Comments >>
+
+- We could identify 9 independent principal components (PCs) that is the same number of our independent variables (features)
+
+- Each PC represents an axis in the transformed space of variables (features). They are found in a way to maximize 
+explaining the variation in the data and are ordered based on a descending order (as can be seen in the screeplot)
+
+
+
+
+# Problem 2
+
+
+```{r}
+
+# load the data
+loaded_obj <- load("/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/day2/data/prec_jan_feb.RData")
+
+
+
+```
+
+## 2.A)
+
+
+```{r}
+
+par(mfcol=c(2,2))
+
+times <- c("00:00", "06:00", "12:00", "18:00")
+
+for (i in 1:4){
+    time <- times[i]
+    image.plot(lon, lat, pre[, , i], main = paste0("January 1st, ", time))
+    map("world", add = T)
+}
+
+```
+
+
+
+```{r}
+
+
+par(mfcol=c(1,2))
+
+mean_values <- apply(pre, c(1, 2), mean)
+
+image.plot(lon, lat, mean_values, main = paste0("Mean Field"))
+
+
+variance_values <- apply(pre, c(1, 2), var)
+
+image.plot(lon, lat, variance_values, main = paste0("Variance Field"))
+
+
+
+```
+
+
+
+## 2.B)
+
+
+```{r}
+
+## bring the data in the right format to perform PCA
+
+pre2 <- t(array(pre, c(dim(pre)[1] * dim(pre)[2], dim(pre)[3])))
+
+
+## perform PCA
+pca <- prcomp(pre2, scale=TRUE)
+
+
+
+## plot the PCs and the amount of variation how much of them can explain in the data
+
+screeplot(pca)
+
+## How much variance is explained by the 1st, the 1st and 2nd, the 1st, 2nd and 3rd PCs. 
+#round(cumsum(pca$sdev^2)/sum( pca$sdev^2), 3)
+
+
+
+## Make a Plot for each loading
+
+par(mfrow = c(2, 2))
+for (i in 1:4) {
+    loading <- pca$rotation[,i]
+    image.plot(lon, lat, matrix(loading, nrow = 31), main = paste("PC", i))
+    map("world", add = TRUE)
+}
+
+
+```
+
+### << Comments >>
+
+- First we needed to bring the data in the right format to perform PCA. We have 31*19=589 locations which are our variables.
+We have 240 time points that are our observations. Therefore, we rearrange the 3 dimensional matrix into a 
+2D matrix where the columns are the locations (variables or features) and the rows are time points (observations).
+- We have spatial locations (variables)
+
+ - in this scenario we do not scale the data since they are all in the same unit and we are interested in the difference in variance that exist in the data
+
+
+## 2.C)
+
+
+```{r}
+
+## Calculate Eigenvalues from sdev
+eigen_vals <- pca$sdev^2
+
+## Display Eigenvalues
+par(mfrow = c(1, 1))
+barplot(eigen_vals, main = "Eigenvalues", xlab = "PC", ylab = "Eigenvalue")
+
+
+```
+
+
+### << Comments >>
+
+- In Principal Component Analysis (PCA), the number of principal components (PCs) 
+you can obtain is equal to the number of variables (or features) in your dataset, 
+provided that the number of observations (samples) is greater than or equal to the number of variables. Here since our
+number of observations is lower than the number of dimensions, only the same number as our **observations (240)** are relevant!
+
+
+## 2.D)
+
+
+```{r}
+
+## let's apply North 'rule of thumb' to the result of the pca analysis to determine how many PCs should we keep.
+
+eigen_vals <- pca$sdev^2
+
+for (i in 1:(length(eigen_vals)-1)){
+    if ((eigen_vals[i] - eigen_vals[i+1])/eigen_vals[i] < sqrt(2/length(eigen_vals))) {
+        pc_opt <- i
+        print(paste0("According to North's rule of thumb the first ", i, " PCs should be kept and the rest should be truncated!"))
+        break
+    }
+}
+
+print(paste0("With ", i, " PCs we can explain ", round(cumsum(pca$sdev^2)/sum( pca$sdev^2), 3)[pc_opt] , " of variance in the data!"))
+
+
+```
+
+
+
+# Problem 3
+
+
+## 3.A)
+
+
+```{r}
+
+# set parameters
+mu <- c(2,5)
+Sigma <- array( c(1, 0.5, 0.5, 1), c(2,2)) 
+
+# eigen values of sigma
+eigenSigma <- eigen(Sigma)
+
+# eigen values
+eigenvalues <- eigenSigma$values
+eigenvalues
+
+# eigen vectors
+eigenvectors <- eigenSigma$vectors
+eigenvectors
+
+```
+
+
+## 3.B&C)
+
+
+```{r}
+
+set.seed(3)
+
+sample <- rmvnorm(100, mean = mu, sigma=Sigma) # sample from bivariate 
+
+
+# scatter plot + eigenvectors
+
+plot(sample, pch='.', xlab='', ylab='', xlim=c(-2, 6),ylim=c(2, 8), cex = 6)
+arrows(2, 5, 2+sqrt(eigenvalues)*eigenvectors[1,], 5+sqrt(eigenvalues)*eigenvectors[2,], col = 2, lwd = 2)
+
+
+```
+
+
+## 3.D)
+
+
+```{r}
+
+set.seed(1)
+# perform pcs
+pca <- prcomp(sample, scale=FALSE)
+
+
+
+plot(pca$x, pch='.', xlab='', ylab='', cex = 6)
+
+
+
+
+arrows(0, 0, eigenvectors[1, 1] * sqrt(eigenvalues[1]), eigenvectors[2, 1] * sqrt(eigenvalues[1]),
+       col="red", lwd=2, length=0.1)
+arrows(0, 0, eigenvectors[1, 2] * sqrt(eigenvalues[2]), eigenvectors[2, 2] * sqrt(eigenvalues[2]),
+       col="red", lwd=2, length=0.1)
+
+
+
+loadings <- pca$rotation  # Get PCA loadings (eigenvectors)
+
+arrows(0, 0, loadings[1, 1] * max(abs(pca$x[, 1])), loadings[2, 1] * max(abs(pca$x[, 1])),
+       col="blue", lwd=2, length=0.1)
+arrows(0, 0, loadings[1, 2] * max(abs(pca$x[, 2])), loadings[2, 2] * max(abs(pca$x[, 2])),
+       col="blue", lwd=2, length=0.1)
+
+
+legend("topright", legend=c("Eigenvectors from Sigma (Covariance)", "Eigenvectors (PCA)"), col=c("red", "blue"), lwd=2)
+       
+```
+
+
+
+### << Comments >>
+
+- the descrepency may arise from two sources:
+
+1. Data Variability: PCA uses the empirical covariance of the data, which may vary slightly from the theoretical covariance defined in sigma due to the randomness in the generated data.
+
+2. Scaling and Centering: PCA works with centered data (mean-subtracted), while the eigenvalues of sigma represent the theoretical model, which assumes the data is centered.
