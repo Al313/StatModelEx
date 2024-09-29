@@ -52,11 +52,17 @@ On the other Hand, Western European and Scandinavian Countries consume their pro
 Mediterranean Latin Countries such as Portugal, Spain and Greece consume theirs along both PC1 and 2, which includs Fruites, Vegetables and Fish additionally to what has already been mentioned along PC1.
 
 ## (b)
-PC1 seems to distinguish between plant-based proteins and animal-based proteins. PC2 strongly emphasizes Fish, Fruits and Vegetables and PC3 shows Consumption of White Meat, Fruits and Vegetables. Starting with Pc4 it gets harder and harder to individuate what each component represents.
+Given the high cumulative variance explained by the first 4 components, and diminishing returns from including more components, it would be reasonable to focus on the first 4 components for interpreting and understanding the data.
+Breakdown of what each component represents:
+- PC1 (44.52%): likely captures the general protein consumption pattern, with higher loadings on food groups such as Fish and Fr&Veg (Fruits & Vegetables). Countries like Portugal and Spain have high scores on PC1 due to higher fish consumption, while countries like Romania consume more cereals and have lower PC1 scores.
 
+- PC2 (18.17%): may reflect meat consumption patterns, particularly distinguishing countries that consume more Red Meat (like the UK and France) from those with lower consumption of these food groups.
+
+- PC3 (12.53%): could represent a trade-off between White Meat and Dairy (Milk) consumption, differentiating countries like Ireland and W Germany from those with lower dairy consumption.
+
+- PC4 (10.61%): might capture more specific dietary differences related to nuts, eggs, and starch, distinguishing countries like Greece and Hungary from others.
 
 # Problem 2
-
 ## (a)
 
 ```{r}

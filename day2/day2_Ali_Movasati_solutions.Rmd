@@ -120,7 +120,6 @@ explaining the variation in the data and are ordered based on a descending order
 loaded_obj <- load("/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/day2/data/prec_jan_feb.RData")
 
 
-
 ```
 
 ## 2.A)
