@@ -1,0 +1,70 @@
+---
+title:  
+    "Day3 exercise solutions"
+date: 
+    "Sept. 30rd, 2024"
+author:  
+    "Ali Movasati"  
+output:  
+    pdf_document
+---
+
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+```{r libraries}
+
+
+# load required libraries
+library(ggplot2)
+library(magrittr)
+library(dplyr)
+library(tibble)
+library(maps)
+library(fields)
+
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Problem 1
+
+```{r}
+
+```
+
+
+## 1.A)
+
+```{r}
+
+```
+
+
+## 1.B)
+
+```{r}
+
+```
+
+
+## 1.C)
+
+```{r}
+
+```
+
+# Problem 2
+
+```{r}
+
+```
