@@ -238,9 +238,10 @@ my.kmean <- function(vec, k_no){
     
     assignments <- apply(vec_dist_df, 2, which.min)
     
-    names(vec) <- as.numeric(k_means[assignments])
+    assignment_df <- data.frame(values = vec, k_assignment = k_means[assignments])
     
-    return(vec)
+    
+    return(assignment_df)
 }
 
 
