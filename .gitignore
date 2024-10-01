@@ -1,4 +1,6 @@
 .DS_Store
-*.Rhistory
+.Rhistory
+
+.Rproj.user/
 
 day3/day3.Rproj
