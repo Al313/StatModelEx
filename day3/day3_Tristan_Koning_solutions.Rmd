@@ -1,0 +1,89 @@
+---
+title: 'Exercise_1 solution'
+date: 'Sept. 16th, 2024'
+author: 'Tristan Koning'
+output: pdf_document
+---
+
+```{r}
+#install.packages("ggdendro")
+library(ggplot2)
+library(ggdendro)
+library(cluster)
+par(mfrow = c(1, 1))
+```
+
+# Problem 1
+
+## (a)
+
+```{r}
+# Setup data for clustering
+protein <- read.csv("day3/data/protein.txt", sep = "\t", header = TRUE)
+row.names(protein) <- protein$Country
+protein <- protein[, -1]
+protein <- scale(protein)
+```
+
+```{r}
+# Single Linkage Clustering
+# Setup
+single_linkage <- hclust(dist(protein), method = "single")
+
+# Convert to dendrogram object
+plot(single_linkage, main = "Single Linkage Clustering Dendrogram", xlab = "Countries", ylab = "Euclidean Distance")
+```
+
+```{r}
+# Complete Linkage Clustering
+# Setup
+complete_linkage <- hclust(dist(protein), method = "complete")
+
+plot(complete_linkage, main = "Complete Linkage Clustering Dendrogram", xlab = "Countries", ylab = "Euclidean Distance")
+```
+
+```{r}
+# Ward Method Clustering
+# Setup
+ward_linkage <- hclust(dist(protein), method = "ward.D")
+
+plot(ward_linkage, main = "Ward Method Clustering Dendrogram", xlab = "Countries", ylab = "Euclidean Distance")
+```
+
+- We can observe that Ward method clustering shows the clearest structure in the dendrogram. It groups countries with small distances together early, and then forms larger clusters incrementally. 
+
+- The other two methods have a more erratic structure, with single linkage clustering showing the most erratic structure, where some countries dont belong to a cluster until the very end.
+
+## (b)
+
+```{r}
+plot(ward_linkage, main = "Ward Method Clustering Dendrogram", xlab = "Countries", ylab = "Euclidean Distance")
+rect.hclust(ward_linkage, k = 5, border = "red")
+```
+
+Looking at the dendrogram of the Ward method, we can observe that the countries are getting grouped together by their geographic location. We can split the dendrogram into 5 clusters, which are shown in the plot by the red borders. The clusters are as follows: Scandinavia, Eastern Europe, Western Europe, The Balkans, and the Mediterranean.
+
+## (c)
+```{r}
+# Perform PCA on data
+pca <- prcomp(protein, scale = TRUE)
+
+# Get loadings of PC
+loadings <- pca$rotation
+loadings_data <- data.frame(Variable = rownames(loadings), PC1 = loadings[, 1], PC2 = loadings[, 2])
+
+# Perform Dimensionality reduction
+scores <- pca$x
+pca_data <- data.frame(Country = data$Country, PC1 = scores[, 1], PC2 = scores[, 2])
+
+ggplot() + 
+  geom_point(data = pca_data, aes(x = PC1, y = PC2)) + 
+  geom_text_repel(data = pca_data, aes(x = PC1, y = PC2, label = Country)) +
+  geom_segment(data = loadings_data, aes(x = 0, y = 0, xend = PC1, yend = PC2),
+               arrow = arrow(length = unit(0.3, "cm")), color = "red") +
+  geom_text_repel(data = loadings_data, aes(x = PC1, y = PC2, label = Variable), color = "red") +
+  labs(title = "PCA Biplot of Protein Data", x = "PC1", y = "PC2") +
+  theme_minimal()
+```
+
+Looking at the plot of the Dimensionality-Reduction and the dendogram, we can observe that they build similar clusters, which are based on the geographic regions of europe, Although the PCA plot has more of a tendency to show Western vs. Eastern Europe in a socio-economic context, while the dendogram shows more of a geographic clustering.

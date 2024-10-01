@@ -20,7 +20,7 @@ library(ggbiplot)
 
 ```{r}
 # Setup
-data <-  read.csv("day2/protein.txt", sep = "\t", header = TRUE)
+data <-  read.csv("day2/data/protein.txt", sep = "\t", header = TRUE)
 
 # Perform PCA on data, except country names
 pca <- prcomp(data[, -1], scale = TRUE)
@@ -69,7 +69,7 @@ Breakdown of what each component represents:
 # Setup
 require(maps)
 require(fields)
-load("day2/prec_jan_feb.RData")
+load("day2/data/prec_jan_feb.RData")
 
 ```
 
