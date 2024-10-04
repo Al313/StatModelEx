@@ -10,6 +10,7 @@ output: pdf_document
 library(ggplot2)
 library(ggdendro)
 library(cluster)
+library(ggrepel)
 par(mfrow = c(1, 1))
 ```
 
@@ -19,10 +20,10 @@ par(mfrow = c(1, 1))
 
 ```{r}
 # Setup data for clustering
-protein <- read.csv("day3/data/protein.txt", sep = "\t", header = TRUE)
+protein <- read.csv("data/protein.txt", sep = "\t", header = TRUE)
 row.names(protein) <- protein$Country
-protein <- protein[, -1]
-protein <- scale(protein)
+#protein <- protein
+#protein <- scale(protein)
 ```
 
 ```{r}
@@ -66,7 +67,11 @@ Looking at the dendrogram of the Ward method, we can observe that the countries 
 ## (c)
 ```{r}
 # Perform PCA on data
-pca <- prcomp(protein, scale = TRUE)
+protein_pca <- protein
+row.names(protein_pca) <- protein_pca$Country
+protein_pca <- protein_pca[, -1]
+protein_pca <- scale(protein_pca)
+pca <- prcomp(protein_pca, scale = TRUE)
 
 # Get loadings of PC
 loadings <- pca$rotation
@@ -74,7 +79,7 @@ loadings_data <- data.frame(Variable = rownames(loadings), PC1 = loadings[, 1], 
 
 # Perform Dimensionality reduction
 scores <- pca$x
-pca_data <- data.frame(Country = data$Country, PC1 = scores[, 1], PC2 = scores[, 2])
+pca_data <- data.frame(Country = protein$Country, PC1 = scores[, 1], PC2 = scores[, 2])
 
 ggplot() + 
   geom_point(data = pca_data, aes(x = PC1, y = PC2)) + 
