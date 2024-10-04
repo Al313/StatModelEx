@@ -78,14 +78,45 @@ for (i in c("Country_clustering")){
     abline(h = 38, col = "blue", lwd = 2, lty = 2)
 }
 
-```
 
-```{r}
-dev.off()
+rect.hclust(ward_linkage, k = 5, border = "red")
+rect.hclust(ward_linkage, k = 2, border = "blue")
 ```
 
 #### << Comments >>
 
-We chose the clustering method Ward. If we cut the dendogram at distance of 70 we will end up with two clear-cut clusters. One of these clusters mostly contain the advanced European countries while the other one mostly contain the developing European countries.
-Therefore, countries protein consumption patterns tend to reflect their underlying socio-economic.
+- We can choose to look at either two or five groups, shown by the blue and red lines respectively. These can be representative of the economical status of the countries, with the two groups representing developed and developing countries, and the five groups being representative of different regions.
+
+## 1.C
+```{r}
+# Perform PCA on data
+protein_pca <- protein
+str(protein)
+
+
+row.names(protein_pca) <- protein_pca$Country
+protein_pca <- protein_pca[, -1]
+protein_pca <- scale(protein_pca)
+pca <- prcomp(protein_pca, scale = TRUE)
+
+# Get loadings of PC
+loadings <- pca$rotation
+loadings_data <- data.frame(Variable = rownames(loadings), PC1 = loadings[, 1], PC2 = loadings[, 2])
+
+# Perform Dimensionality reduction
+scores <- pca$x
+pca_data <- data.frame(Country = protein$Country, PC1 = scores[, 1], PC2 = scores[, 2])
+
+ggplot() + 
+  geom_point(data = pca_data, aes(x = PC1, y = PC2)) + 
+  geom_text_repel(data = pca_data, aes(x = PC1, y = PC2, label = Country)) +
+  geom_segment(data = loadings_data, aes(x = 0, y = 0, xend = PC1, yend = PC2),
+               arrow = arrow(length = unit(0.3, "cm")), color = "red") +
+  geom_text_repel(data = loadings_data, aes(x = PC1, y = PC2, label = Variable), color = "red") +
+  labs(title = "PCA Biplot of Protein Data", x = "PC1", y = "PC2") +
+  theme_minimal()
+```
+
+Looking at the plot of the Dimensionality-Reduction and the dendogram, we can observe that they build similar clusters, which are based on the geographic regions of europe, Although the PCA plot has more of a tendency to show Western vs. Eastern Europe in a socio-economic context, while the dendogram shows more of a geographic clustering.
+
 
