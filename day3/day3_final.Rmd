@@ -1,0 +1,91 @@
+---
+title: 'Exercise 3 solution'
+date: 'Oct. 1st, 2024'
+author: 'Tristan, Köning, Ali Movasati, Isabelle Cretton'
+output: pdf_document
+---
+
+```{r global options}
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r libraries}
+library(cluster)
+library(stats)
+library(ggplot2)
+library(magrittr)
+library(dplyr)
+library(tibble)
+library(maps)
+library(fields)
+par(mfrow = c(1, 1))
+```
+
+# Problem 1 (Clustering)
+## 1.A
+```{r}
+# Setup data for clustering
+protein <- read.csv("day3/data/protein.txt", sep = "\t", header = TRUE)
+row.names(protein) <- protein$Country
+protein <- protein[, -1]
+protein <- scale(protein)
+```
+
+```{r}
+# Single Linkage Clustering
+# Setup
+single_linkage <- hclust(dist(protein), method = "single")
+
+# Convert to dendrogram object
+plot(single_linkage, main = "Single Linkage Clustering Dendrogram", xlab = "Countries", ylab = "Euclidean Distance")
+```
+
+```{r}
+# Complete Linkage Clustering
+# Setup
+complete_linkage <- hclust(dist(protein), method = "complete")
+
+plot(complete_linkage, main = "Complete Linkage Clustering Dendrogram", xlab = "Countries", ylab = "Euclidean Distance")
+```
+
+```{r}
+# Ward Method Clustering
+# Setup
+ward_linkage <- hclust(dist(protein), method = "ward.D")
+
+plot(ward_linkage, main = "Ward Method Clustering Dendrogram", xlab = "Countries", ylab = "Euclidean Distance")
+```
+
+- We can observe that Ward method clustering shows the clearest structure in the dendrogram. It groups countries with small distances together early, and then forms larger clusters incrementally. 
+
+- The other two methods have a more erratic structure, with single linkage clustering showing the most erratic structure, where some countries dont belong to a cluster until the very end.
+
+## 1.B
+```{r}
+
+# perform clustering
+for (i in c("Country_clustering")){
+    if (i == "Country_clustering"){
+        data <- protein
+    } else if (i == "Protein_clustering"){
+        data <- protein_t
+    }
+    distance_matrix <- dist(data, method = "euclidean")
+    hc_single <- hclust(distance_matrix, method = "ward.D")
+    plot(hc_single, main = paste0("Dendrogram - Ward Linkage Method \n for ", i), xlab = "Data Points", ylab = "Height")
+    abline(h = 70, col = "red", lwd = 2, lty = 2)
+    abline(h = 38, col = "blue", lwd = 2, lty = 2)
+}
+
+```
+
+```{r}
+dev.off()
+```
+
+#### << Comments >>
+
+We chose the clustering method Ward. If we cut the dendogram at distance of 70 we will end up with two clear-cut clusters. One of these clusters mostly contain the advanced European countries while the other one mostly contain the developing European countries.
+Therefore, countries protein consumption patterns tend to reflect their underlying socio-economic.
+
