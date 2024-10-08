@@ -2,12 +2,14 @@
 title: 'Exercise 4 solution'
 date: 'Oct. 8th, 2024'
 author: 'Isabelle Cretton'
-output: pdf_document
+output: 
+  pdf_document:
+    latex_engine: xelatex
 ---
 
 ```{r global options}
 # Set global code chunk options
-knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 ```{r libraries}
@@ -33,7 +35,7 @@ library(caret)        # For data splitting and accuracy evaluation
 ## Load the txt file
 ```{r}
 # Load the data
-ec_data <- read.csv("day4/data/ec.txt", header = TRUE)
+ec_data <- read.csv("~/Desktop/SEMESTER_5/STAT-MODELING/EXERCISES/StatModelEx/day4/data/ec.txt", header = TRUE)
 ```
 
 ## 1.A
@@ -237,7 +239,7 @@ QDA proved to be the most effective classification method for this dataset, whil
 ## Load the R data file
 ```{r}
 # Load the data
-load("day4/data/wine.RData")
+load("~/Desktop/SEMESTER_5/STAT-MODELING/EXERCISES/StatModelEx/day4/data/wine.RData")
 # Check the structure of the data
 str(wine)
 ```
