@@ -1,0 +1,225 @@
+```{r}
+library(ggplot2)
+library(GGally)
+library(NbClust)
+library(factoextra)
+library(ggrepel)
+library(MASS)
+library(party)
+library(randomForest)
+```
+
+# Problem 1
+
+## (a)
+```{r}
+# Setup
+data <-  read.csv("day4/data/ec.txt", sep = ",", header = TRUE)
+str(data)
+summary(data)
+
+# Remove rows with missing values
+data <- data[complete.cases(data), ]
+
+# Descriptive Statistics for Numerical Columns
+numeric_columns <- sapply(data, is.numeric)
+descriptive_stats <- data.frame(
+  mean = sapply(data[, numeric_columns], mean),
+  sd = sapply(data[, numeric_columns], sd),
+  median = sapply(data[, numeric_columns], median),
+  IQR = sapply(data[, numeric_columns], IQR)
+)
+descriptive_stats
+
+# Correlation Matrix
+correlation_matrix <- cor(data[, numeric_columns], use = "complete.obs")
+correlation_matrix
+
+# Pairs Plot
+ggpairs(data[, numeric_columns])
+
+# Box plot for outliers
+boxplot(data$Work, main = "Work")
+boxplot(data$Price, main = "Price")
+boxplot(data$Salary, main = "Salary")
+```
+
+From the pairs plot and the correlation matrix we can see that there is a strong positive correlation between the salary and the price indexes, as one might expect (Classic example here is Switzerland). On the other hand, there is a negative correlation between hours worked and both prices and salaries, so the less the average of hours worked is, the higher the salary and the prices.  
+There are barely any outliers, there exists only one in the variable "Price"
+
+Generally, the data is comparable, although there are some entries where there are no observations, so we have to take them out of the analysis.
+
+## (b)
+
+```{r}
+# Setup data
+data_scaled <- scale(data[, numeric_columns])
+row.names(data_scaled) <- data$City
+
+# Single Linkage Clustering
+single_linkage <- hclust(dist(data_scaled), method = "single")
+plot(single_linkage, main = "Single Linkage Clustering Dendrogram", xlab = "Cities", ylab = "Euclidean Distance")
+
+# Complete Linkage Clustering
+complete_linkage <- hclust(dist(data_scaled), method = "complete")
+plot(complete_linkage, main = "Complete Linkage Clustering Dendrogram", xlab = "Cites", ylab = "Euclidean Distance")
+
+# Ward Method Clustering
+ward_linkage <- hclust(dist(data_scaled), method = "ward.D")
+plot(ward_linkage, main = "Ward Method Clustering Dendrogram", xlab = "Cities", ylab = "Euclidean Distance")
+
+
+# Select best number of clusters by silhouette method
+silhouette_single <- fviz_nbclust(data_scaled, FUN = hcut, method = "silhouette", hc_method = "single")
+silhouette_complete <- fviz_nbclust(data_scaled, FUN = hcut, method = "silhouette", hc_method = "complete")
+silhouette_ward <- fviz_nbclust(data_scaled, FUN = hcut, method = "silhouette", hc_method = "ward.D")
+
+# Extract highest average silhouette width
+max_silhouette_single <- max(silhouette_single$data$y)
+max_silhouette_complete <- max(silhouette_complete$data$y)
+max_silhouette_ward <- max(silhouette_ward$data$y)
+
+# Print highest average silhouette widths
+list(
+  max_silhouette_single = c(max_silhouette_single, which.max(silhouette_single$data$y)),
+  max_silhouette_complete = c(max_silhouette_complete, which.max(silhouette_complete$data$y)),
+  max_silhouette_ward = c(max_silhouette_ward, which.max(silhouette_ward$data$y))
+)
+
+# Show the best number of groups in cluster
+plot(complete_linkage, main = "Complete Linkage Clustering Dendrogram", xlab = "Cites", ylab = "Euclidean Distance")
+rect.hclust(complete_linkage, k = which.max(silhouette_complete$data$y), border = "red")
+```
+
+We have chosen the complete linkage method as it has the highest silhouette width, which indicates the model that has the clearest group allocations. The best number of clusters is 2 utilizing either ward or complete linkage as a method and we have chosen complete linkage as our method.
+One cluster represents the more developed cities, which includes mostly western cities. The other group has the less developed cities, such as african and asian cities which are part of developing countries.
+
+## (c)
+
+```{r}
+# Perform PCA
+pca <- prcomp(data_scaled, scale = TRUE)
+
+# Get loadings of PC
+loadings <- pca$rotation
+loadings_data <- data.frame(
+  Variable = rownames(loadings),
+  PC1 = loadings[, 1],
+  PC2 = loadings[, 2]
+  )
+
+# Perform Dimensionality reduction
+scores <- pca$x
+pca_data <- data.frame(
+  City = data$City,
+  PC1 = scores[, 1],
+  PC2 = scores[, 2]
+)
+
+# Plot PCA
+ggplot(pca_data, aes(x = PC1, y = PC2)) +
+    geom_point() +
+    geom_text_repel(aes(label = City)) +
+    geom_segment(data = loadings_data, aes(x = 0, y = 0, xend = PC1, yend = PC2),
+               arrow = arrow(length = unit(0.3, "cm")), color = "red") +
+    geom_text_repel(data = loadings_data, aes(x = PC1, y = PC2, label = Variable), color = "red") +
+    labs(title = "PCA of Cities", x = "PC1", y = "PC2") + 
+    theme_minimal()
+```
+
+Using the biplot of the PCA we can identify similar group, the "left" half of the plot are the developed cities, and the "right" half are the cities part of developing countries. 
+However, the PCA slightly contradicts the correlation matrix of the EDA, as we can see that the hours worked and both salary and prices are slightly correlated in the biplot when looking at the directions of the loadings. On the plot this seems to make sense though, as the cities such as Taipei and Hong Kong which have been clustered with the developing cities are actually more developed than say Lagos, so it makes sense that they have a higher salary and prices. 
+
+## (d)
+
+```{r}
+# LDA
+# Hyperparameters LDA
+N <- nrow(data)
+groups <- factor(rep(data$SalaryCat, each = N / 3))
+
+# Perform LDA
+tmp <- lda(data$SalaryCat ~ data$Salary + data$Price)
+tmp
+
+# Convert SalaryCat to numeric
+groups <- as.numeric(factor(data$SalaryCat))
+
+# Plot
+x1 <- seq(min(data$Salary), max(data$Salary), length = nrow(data))
+x2 <- seq(min(data$Price), max(data$Price), length = nrow(data))
+grid <- expand.grid(Salary = x1, Price = x2)
+groups <- as.numeric(data$SalaryCat)
+image(x1, x2, matrix(data$SalaryCat, nrow(data), nrow(data)), col = c(rgb(0,0,0,0.2), rgb(1,0,0,0.3)))
+
+
+# QDA
+tmp <- qda(data$SalaryCat ~ data$Salary + data$Price)
+# TODO: Plot doesnt work
+```
+
+## (e)
+
+```{r}
+# TODO
+```
+
+# Problem 2
+
+## (a)
+```{r}
+load("day4/data/wine.RData")
+str(wine)
+summary(wine)
+
+#ggplot(wine, aes(x=Alcohol, y=Malic, color = as.factor(Type))) +
+
+# Classification Tree
+tree <- ctree(Type ~ ., data = wine)
+tree
+
+# Random Forest
+random_forest <- randomForest(Type ~ ., data = wine)
+random_forest
+
+```
+
+## (b)
+```{r}
+# Plot results
+plot(tree)
+plot(random_forest)
+
+# Confusion Matrix, Accuracy, Precision, Sensitivity
+confusion_matrix_tree <- table(predict(tree), wine$Type)
+confusion_matrix_random_forest <- table(predict(random_forest), wine$Type)
+
+# Accuracy
+accuracy_tree <- sum(diag(confusion_matrix_tree)) / sum(confusion_matrix_tree)
+accuracy_random_forest <- sum(diag(confusion_matrix_random_forest)) / sum(confusion_matrix_random_forest)
+
+# Precision
+precision_tree <- diag(confusion_matrix_tree) / colSums(confusion_matrix_tree)
+precision_random_forest <- diag(confusion_matrix_random_forest) / colSums(confusion_matrix_random_forest)
+
+# Sensitivity
+sensitivity_tree <- diag(confusion_matrix_tree) / rowSums(confusion_matrix_tree)
+sensitivity_random_forest <- diag(confusion_matrix_random_forest) / rowSums(confusion_matrix_random_forest)
+
+# Print results
+list(
+  confusion_matrix_tree = confusion_matrix_tree,
+  confusion_matrix_random_forest = confusion_matrix_random_forest,
+  accuracy_tree = accuracy_tree,
+  accuracy_random_forest = accuracy_random_forest,
+  precision_tree = precision_tree,
+  precision_random_forest = precision_random_forest,
+  sensitivity_tree = sensitivity_tree,
+  sensitivity_random_forest = sensitivity_random_forest
+)
+```
+
+## (c)
+```{r}
+
+```
