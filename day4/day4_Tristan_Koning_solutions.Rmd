@@ -14,7 +14,7 @@ library(randomForest)
 ## (a)
 ```{r}
 # Setup
-data <-  read.csv("day4/data/ec.txt", sep = ",", header = TRUE)
+data <-  read.csv("data/ec.txt", sep = ",", header = TRUE)
 str(data)
 summary(data)
 
@@ -168,7 +168,7 @@ tmp <- qda(data$SalaryCat ~ data$Salary + data$Price)
 
 ## (a)
 ```{r}
-load("day4/data/wine.RData")
+load("data/wine.RData")
 str(wine)
 summary(wine)
 
@@ -221,5 +221,57 @@ list(
 
 ## (c)
 ```{r}
+set.seed(1)
+cross_validate <- function(data, dependent_var, n_folds = 10, model_type) {
+  # Setup
+  folds <- sample(rep(1:n_folds, length.out = nrow(data)))
+  accuracy <- numeric(n_folds)
+  precision <- numeric(n_folds)
+  sensitivity <- numeric(n_folds)
 
+
+  for (i in 1:n_folds) {
+    # Setup test / training data
+    train_indices <- which(folds != i)
+    test_indices <- which(folds == i)
+
+    train_data <- data[train_indices, ]
+    test_data <- data[test_indices, ]
+
+    # Create model
+    if (model_type == "ctree") {
+      model <- ctree(as.formula(paste(dependent_var, "~ .")), data=train_data)
+    }
+    else if (model_type == "randomForest"){
+      model <- randomForest(as.formula(paste(dependent_var, "~ .")), data=train_data)
+    }
+
+    # Predict
+    predictions <- predict(model, test_data)
+    confusion_matrix <- table(predictions, test_data[[dependent_var]])
+    accuracy[i] <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+    precision[i] <- mean(diag(confusion_matrix) / colSums(confusion_matrix), na.rm = TRUE)
+    sensitivity[i] <- mean(diag(confusion_matrix) / rowSums(confusion_matrix), na.rm = TRUE)
+  }
+
+  # Print results
+  list (
+    accuracy = mean(accuracy),
+    precision = mean(precision),
+    sensitivity = mean(sensitivity)
+  )
+}
+
+results_ctree <- cross_validate(wine, "Type", model_type = "ctree")
+results_random_forest <- cross_validate(wine, "Type", model_type = "randomForest")
+
+list(
+  results_ctree = results_ctree,
+  results_random_forest = results_random_forest
+)
 ```
+
+
+## (d)
+
+The random forest seems to be the better model in all metrics we are tracking (accuracy, precision and sensitivity). The reason for this could be that the random forest is a model of that also randomly selects between the different variables while a classification tree looks at just the data points. This means that the random forest is a more robust model.
