@@ -1,0 +1,339 @@
+---
+title: 'Exercise 3 solution'
+date: 'Oct. 1st, 2024'
+author: 'Tristan, Köning, Ali Movasati, Isabelle Cretton'
+output: pdf_document
+---
+
+```{r global options}
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r libraries}
+library(cluster)
+library(stats)
+library(party)
+library(dplyr)
+library(ggplot2)
+#install.packages("skimr")
+library(skimr)
+library(tidyverse)
+library(ggrepel)
+#library for LDA analysis
+library(MASS)
+#libraries for random forests and classification trees
+library(rpart)        # For classification trees
+library(rpart.plot)
+library(randomForest)       # For data splitting and accuracy evaluation
+library(caret)        # For data splitting and accuracy evaluation
+```
+
+# Problem 1
+
+## Load the txt file
+```{r}
+# Load the data
+ec_data <- read.csv("data/ec.txt", header = TRUE)
+```
+
+## 1.A
+### explore and visualize the data w/ plots and tables
+```{r}
+# Summary of the data
+skim(ec_data)
+ec_data_clean <- ec_data %>% na.omit()
+```
+
+```{r}
+# Scatterplot of the data
+ggplot(ec_data, aes(x = Work, y = Salary, color = Price)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") + 
+  scale_color_gradient(low = "blue", high = "red") +
+  labs(title = "Scatterplot of Work vs Salary",
+       x = "Work (Weighted Average of Working Hours)",
+       y = "Salary (Index)",
+       color = "Price Index") +
+  theme_minimal()
+```
+This plot shows a negative correlation between Work (average working hours) and Salary (index of earnings). Cities with higher working hours tend to have lower salaries.
+There seems to be a consistent trend where cities that require more work hours offer lower salaries, with Zurich (salary = 100) standing out as an exception with a lower work average and higher salary. Prices generally correlate positively with salaries, though not perfectly.
+
+```{r}
+# Boxplot of the data
+boxplot_data <- ec_data_clean %>% 
+  pivot_longer(cols = c(Price, Salary), 
+               names_to = "Variable", 
+               values_to = "Index")
+
+# Plot the boxplot
+ggplot(boxplot_data, aes(x = Variable, y = Index, fill = Variable)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("Price" = "#FF9999", "Salary" = "#9999FF")) +
+  labs(title = "Boxplot of Price and Salary Indices") +
+  theme_minimal()
+```
+The boxplot compares the distribution of Price and Salary. Price has a narrower spread than Salary, with a higher median value (~70) compared to the median salary (~40).
+The greater variability in Salary indicates that wage levels are more diverse across cities than price levels. Many cities face low salary levels despite high prices, emphasizing the cost of living challenges in certain cities.
+
+```{r}
+# Density plot of the data
+ggplot(ec_data_clean, aes(x = Work, fill = SalaryCat)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Work Hours by Salary Category",
+       x = "Work (Weighted Average of Working Hours)",
+       fill = "Salary Category") +
+  theme_minimal()
+```
+This plot shows the distribution of Work (working hours) broken down by SalaryCat (salary categories). The highest salary category (67.6, 100] is associated with cities that have a narrow peak in work hours, with a median around 1900-2000 hours. Conversely, lower salary categories (2.6, 35.1] and (35.1, 67.6] are spread across a wider range of work hours, with some cities having very high work hours.
+Cities with higher salaries tend to have more standardized working hours, while cities with lower salaries show a broader spread in work hours, including cities with extremely high work burdens.
+
+```{r}
+colnames(ec_data_clean)
+```
+
+## 1.B
+```{r}
+# (remove non-numeric columns and scale)
+cluster_data <- ec_data_clean %>%
+  dplyr::select(Work, Price, Salary) %>%
+  scale()  # standardize the data to mean 0 and variance 1
+
+set.seed(111)  # Set seed for reproducibility
+wss <- sapply(1:10, function(k) { #within-cluster sum of squares
+  kmeans(cluster_data, centers = k, nstart = 20)$tot.withinss
+})
+
+# Plot the elbow method
+ggplot(data.frame(k = 1:10, WSS = wss), aes(x = k, y = WSS)) +
+  geom_line(color = "blue") +
+  geom_point(color = "red") +
+  labs(title = "Elbow Method for K-means Clustering",
+       x = "Number of Clusters (K)",
+       y = "Total Within-cluster Sum of Squares (WSS)") +
+  theme_minimal()
+
+set.seed(111)
+kmeans_result <- kmeans(cluster_data, centers = 3, nstart = 20)
+
+# Add cluster assignment to the data
+ec_data_clean$cluster <- as.factor(kmeans_result$cluster)
+
+# Visualize clusters
+ggplot(ec_data_clean, aes(x = Work, y = Salary, color = cluster)) +
+  geom_point(size = 3) +
+  geom_text(aes(label = City), hjust = 1.2, vjust = -0.5, size = 3) +
+  labs(title = "Cluster Analysis of Cities Based on Work, Salary, and Price",
+       x = "Work (Weighted Average of Working Hours)",
+       y = "Salary (Index)") +
+  theme_minimal()
+```
+- Cluster 1 (Red): Cities in this cluster (e.g., Hong Kong, Manila, Bogota) are characterized by high work hours and low salaries. They might represent emerging markets where the cost of living and salaries are lower, but work demands are higher.
+- Cluster 2 (Blue): Cities like Mexico City, Seoul, and Athens are similar in that they have moderate working hours and moderate to low salaries. These cities often show a developing or transitional economic status.
+- Cluster 3 (Green): Cities like Zurich, New York, and Tokyo are similar in offering high salaries and lower working hours, suggesting that they are developed economies with better work-life balance and higher living standards.
+
+## 1.C
+```{r}
+pca <- prcomp(cluster_data, scale = TRUE)
+
+loadings <- pca$rotation
+loadings_data <- data.frame(Variable = rownames(loadings), PC1 = loadings[, 1], PC2 = loadings[, 2])
+
+# perform Dimensionality reduction
+scores <- pca$x
+pca_data <- data.frame(City = ec_data_clean$City, PC1 = scores[, 1], PC2 = scores[, 2])
+
+# plot the PCA biplot
+ggplot() + 
+  geom_point(data = pca_data, aes(x = PC1, y = PC2, color = ec_data_clean$cluster)) + 
+  geom_text_repel(data = pca_data, aes(x = PC1, y = PC2, label = City)) +
+  geom_segment(data = loadings_data, aes(x = 0, y = 0, xend = PC1, yend = PC2),
+               arrow = arrow(length = unit(0.3, "cm")), color = "red") +
+  geom_text_repel(data = loadings_data, aes(x = PC1, y = PC2, label = Variable), color = "red") +
+  labs(title = "PCA Biplot of Cities Based on Work, Salary, and Price",
+       x = "PC1",
+       y = "PC2") +
+  theme_minimal()
+```
+The PCA biplot reveals how cities differ in terms of Work, Salary, and Price by projecting them onto two principal components (PC1 and PC2). PC1 primarily captures the variation in working hours, with cities like Hong Kong and Manila positioned on the right, indicating high working hours, while cities like Zurich and Geneva are on the left, showing fewer working hours. PC2 captures the variation in salary and price, with cities like Lisbon and Rio de Janeiro higher on the plot, indicating higher salary and price levels, while Bombay and Seoul show lower values. The biplot visually confirms the clustering pattern, where cities with similar work-life and economic profiles are grouped together, such as high-salary, low-work cities in Cluster 3 (green) and high-work, low-salary cities in Cluster 1 (red).
+
+## 1.D (LDA & QDA)
+```{r}
+data <- ec_data_clean %>%
+  dplyr::select(Work, Price, SalaryCat) %>%
+  na.omit()  # Remove rows with missing data
+
+# Convert SalaryCat to a factor
+data$SalaryCat <- as.factor(data$SalaryCat)
+
+# LDA model
+lda_model <- lda(SalaryCat ~ Work + Price, data = data)
+
+# Create a grid of values for Work and Price to plot decision boundaries
+x_min <- min(data$Work) - 1
+x_max <- max(data$Work) + 1
+y_min <- min(data$Price) - 1
+y_max <- max(data$Price) + 1
+
+grid <- expand.grid(Work = seq(x_min, x_max, length.out = 100),
+                    Price = seq(y_min, y_max, length.out = 100))
+
+# Predict class probabilities and categories for LDA and QDA
+lda_pred <- predict(lda_model, grid)
+grid$lda_class <- lda_pred$class
+
+# Plot LDA decision boundaries
+lda_plot <- ggplot() + 
+  geom_point(data = grid, aes(x = Work, y = Price, color = lda_class), alpha = 0.3) + 
+  geom_point(data = data, aes(x = Work, y = Price, color = SalaryCat)) +
+  labs(title = "LDA: Work vs Price Decision Boundary",
+       x = "Work (Weighted Average of Working Hours)",
+       y = "Price (Index)") +
+  theme_minimal()
+
+lda_plot
+```
+
+```{r}
+#qda
+qda_model <- qda(SalaryCat ~ Work + Price, data = data)
+
+qda_pred <- predict(qda_model, grid)
+grid$qda_class <- qda_pred$class
+
+
+# Plot QDA decision boundaries
+qda_plot <- ggplot() + 
+  geom_point(data = grid, aes(x = Work, y = Price, color = qda_class), alpha = 0.3) + 
+  geom_point(data = data, aes(x = Work, y = Price, color = SalaryCat)) +
+  labs(title = "QDA: Work vs Price Decision Boundary",
+       x = "Work (Weighted Average of Working Hours)",
+       y = "Price (Index)") +
+  theme_minimal()
+
+qda_plot
+```
+### LDA vs QDA
+
+#### LDA
+The salary categories (35.1, 67.6] (green) and (67.6, 100] (blue) are more clearly separated. The linear boundary works well in this case, especially in the middle and upper categories.
+For example, the green region is formed between about 1700 and 2100 work hours, while blue is in the lower working hours and higher prices.
+However, the lower salary category (2.6, 35.1] (red) tends to dominate more at the extreme ranges of Work.
+
+#### QDA
+The regions are similar to LDA, but QDA produces more curved and nuanced boundaries, especially in areas where there might be overlaps between salary categories. The flexibility of QDA allows for a more detailed separation in these regions.
+For example, the red region expands differently in QDA, accommodating some data points that were likely misclassified in LDA due to its rigid linear constraints.
+
+### Conclusion
+For this data, QDA fits better. We can see that it effectively captures the non-linear relationships between Work and Price (this is especially marked for our Blue class, which LDA ineffectively captured), providing more detailed decision boundaries that better separate the salary categories. LDA, while useful for linearly separable data, struggles with the complexity of this dataset, leading to some misclassifications and less distinct boundaries.
+
+## 1.E
+- EDA provided insights into the relationships between Work, Salary, and Price, showing clear patterns across cities.
+- K-means clustering revealed three distinct groups of cities with different economic profiles based on their work hours and salary levels.
+- PCA reduced the dimensionality of the data and visualized how these cities are distributed across the two main sources of variation (Work and Salary/Price), confirming the clustering results.
+- LDA and QDA provided classification models for predicting salary categories based on Work and Price. QDA’s quadratic boundaries offered superior classification accuracy, while LDA’s linear approach struggled with the non-linear relationships in the data.
+QDA proved to be the most effective classification method for this dataset, while PCA and K-means clustering provided strong tools for understanding the structure of the data and identifying patterns among cities.
+
+# Problem 2 (classification trees & random forests)
+## Load the R data file
+```{r}
+# Load the data
+load("data/wine.RData")
+# Check the structure of the data
+str(wine)
+```
+
+## 2.A
+```{r}
+set.seed(111)
+# Split the data into training and testing sets
+train_index <- sample(1:nrow(wine), 0.7 * nrow(wine))
+train_data <- wine[train_index, ]
+test_data <- wine[-train_index, ]
+```
+
+## classification trees
+```{r}
+tree_model <- rpart(Type ~ ., data = train_data, method = "class")
+tree_pred <- predict(tree_model, test_data, type = "class")
+confusion_matrix_tree <- table(tree_pred, test_data$Type)
+confusion_matrix_tree
+
+tree_accuracy <- confusionMatrix(tree_pred, test_data$Type)$overall["Accuracy"]
+print(paste("Classification Tree Accuracy:", round(tree_accuracy * 100, 2), "%"))
+
+rpart.plot(tree_model, main = "Classification Tree for Wine Data")
+```
+
+## Random Forest
+```{r}
+rf_model <- randomForest(Type ~ ., data = train_data, ntree = 500, mtry = 3, importance = TRUE)
+
+# Predict on the test set
+rf_pred <- predict(rf_model, test_data)
+
+# eval
+rf_accuracy <- confusionMatrix(rf_pred, test_data$Type)$overall["Accuracy"]
+print(paste("Random Forest Accuracy:", round(rf_accuracy * 100, 2), "%"))
+
+varImpPlot(rf_model, main = "Variable Importance in Random Forest Model")
+```
+
+## Cross Validation
+```{r}
+set.seed(111)
+cross_validate <- function(data, dependent_var, n_folds = 10, model_type) {
+  # Setup
+  folds <- sample(rep(1:n_folds, length.out = nrow(data)))
+  accuracy <- numeric(n_folds)
+  precision <- numeric(n_folds)
+  sensitivity <- numeric(n_folds)
+
+
+  for (i in 1:n_folds) {
+    # Setup test / training data
+    train_indices <- which(folds != i)
+    test_indices <- which(folds == i)
+
+    train_data <- data[train_indices, ]
+    test_data <- data[test_indices, ]
+
+    # Create model
+    if (model_type == "ctree") {
+      model <- ctree(as.formula(paste(dependent_var, "~ .")), data=train_data)
+    }
+    else if (model_type == "randomForest"){
+      model <- randomForest(as.formula(paste(dependent_var, "~ .")), data=train_data)
+    }
+
+    # Predict
+    predictions <- predict(model, test_data)
+    confusion_matrix <- table(predictions, test_data[[dependent_var]])
+    accuracy[i] <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+    precision[i] <- mean(diag(confusion_matrix) / colSums(confusion_matrix), na.rm = TRUE)
+    sensitivity[i] <- mean(diag(confusion_matrix) / rowSums(confusion_matrix), na.rm = TRUE)
+  }
+
+  # Print results
+  list (
+    accuracy = mean(accuracy),
+    precision = mean(precision),
+    sensitivity = mean(sensitivity)
+  )
+}
+
+results_ctree <- cross_validate(wine, "Type", model_type = "ctree")
+results_random_forest <- cross_validate(wine, "Type", model_type = "randomForest")
+
+list(
+  results_ctree = results_ctree,
+  results_random_forest = results_random_forest
+)
+```
+
+## Analysis
+
+We obtain higher accuracy with random forest model compared to decision tree. This is because random forest tends to be more robust by
+adding more variability to the resulted trees by not only randomly selecting observations (bootstraping), but also randomly including the variables in the
+decision tress.
