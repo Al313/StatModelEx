@@ -1,19 +1,20 @@
 ---
-title: 'Exercise 3 solution'
-date: 'Oct. 1st, 2024'
-author: 'Tristan, Köning, Ali Movasati, Isabelle Cretton'
-output: pdf_document
+title: 'Exercise 4 solution'
+date: 'Oct. 8th, 2024'
+author: 'Isabelle Cretton'
+output: 
+  pdf_document:
+    latex_engine: xelatex
 ---
 
 ```{r global options}
 # Set global code chunk options
-knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 ```{r libraries}
 library(cluster)
 library(stats)
-library(party)
 library(dplyr)
 library(ggplot2)
 #install.packages("skimr")
@@ -29,12 +30,12 @@ library(randomForest)       # For data splitting and accuracy evaluation
 library(caret)        # For data splitting and accuracy evaluation
 ```
 
-# Problem 1
+# Problem 1 (EC Dataset)
 
 ## Load the txt file
 ```{r}
 # Load the data
-ec_data <- read.csv("data/ec.txt", header = TRUE)
+ec_data <- read.csv("/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/StatModelEx/day4/data/ec.txt", header = TRUE)
 ```
 
 ## 1.A
@@ -215,7 +216,6 @@ qda_plot <- ggplot() +
 qda_plot
 ```
 ### LDA vs QDA
-
 #### LDA
 The salary categories (35.1, 67.6] (green) and (67.6, 100] (blue) are more clearly separated. The linear boundary works well in this case, especially in the middle and upper categories.
 For example, the green region is formed between about 1700 and 2100 work hours, while blue is in the lower working hours and higher prices.
@@ -239,7 +239,7 @@ QDA proved to be the most effective classification method for this dataset, whil
 ## Load the R data file
 ```{r}
 # Load the data
-load("data/wine.RData")
+load("/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/StatModelEx/day4/data/wine.RData")
 # Check the structure of the data
 str(wine)
 ```
@@ -280,60 +280,80 @@ print(paste("Random Forest Accuracy:", round(rf_accuracy * 100, 2), "%"))
 varImpPlot(rf_model, main = "Variable Importance in Random Forest Model")
 ```
 
-## Cross Validation
+### Cross validation
+
+
+
 ```{r}
-set.seed(111)
-cross_validate <- function(data, dependent_var, n_folds = 10, model_type) {
-  # Setup
-  folds <- sample(rep(1:n_folds, length.out = nrow(data)))
-  accuracy <- numeric(n_folds)
-  precision <- numeric(n_folds)
-  sensitivity <- numeric(n_folds)
 
 
-  for (i in 1:n_folds) {
-    # Setup test / training data
-    train_indices <- which(folds != i)
-    test_indices <- which(folds == i)
 
-    train_data <- data[train_indices, ]
-    test_data <- data[test_indices, ]
-
-    # Create model
-    if (model_type == "ctree") {
-      model <- ctree(as.formula(paste(dependent_var, "~ .")), data=train_data)
+# Define the cross-validation function
+cross_validate_rf <- function(data, target_variable, n_folds = 10, model = "rf") {
+  # Convert target variable to a factor
+  data[[target_variable]] <- as.factor(data[[target_variable]])
+  
+  # Create a vector to store accuracy for each fold
+  accuracies <- numeric(n_folds)
+  
+  # Create folds
+  set.seed(123)  # For reproducibility
+  fold_indices <- sample(1:n_folds, nrow(data), replace = TRUE)
+  
+  # Cross-validation loop
+  for (fold in 1:n_folds) {
+    # Split data into training and testing sets
+    test_data <- data[fold_indices == fold, ]
+    train_data <- data[fold_indices != fold, ]
+    
+    if (model == "rf"){
+        # Train the Random Forest model
+        classification_model <- randomForest(as.formula(paste(target_variable, "~ .")), 
+                                data = train_data, 
+                                importance = TRUE)
+    } else if (model == "ctree"){
+        classification_model <- ctree(Type ~ .,  data=wine, 
+                                        control = ctree_control(maxdepth = 5))
     }
-    else if (model_type == "randomForest"){
-      model <- randomForest(as.formula(paste(dependent_var, "~ .")), data=train_data)
-    }
 
-    # Predict
-    predictions <- predict(model, test_data)
-    confusion_matrix <- table(predictions, test_data[[dependent_var]])
-    accuracy[i] <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
-    precision[i] <- mean(diag(confusion_matrix) / colSums(confusion_matrix), na.rm = TRUE)
-    sensitivity[i] <- mean(diag(confusion_matrix) / rowSums(confusion_matrix), na.rm = TRUE)
+    # Predict on the test data
+    predictions <- predict(classification_model, test_data)
+    
+    # Calculate accuracy
+    accuracies[fold] <- mean(predictions == test_data[[target_variable]])
   }
-
+  
+  # Calculate the average accuracy
+  average_accuracy <- mean(accuracies)
+  
   # Print results
-  list (
-    accuracy = mean(accuracy),
-    precision = mean(precision),
-    sensitivity = mean(sensitivity)
-  )
+  cat("Average accuracy from cross-validation: ", average_accuracy * 100, "%\n")
+  
+  # Return the average accuracy
+  return(average_accuracy)
 }
 
-results_ctree <- cross_validate(wine, "Type", model_type = "ctree")
-results_random_forest <- cross_validate(wine, "Type", model_type = "randomForest")
 
-list(
-  results_ctree = results_ctree,
-  results_random_forest = results_random_forest
-)
+## run the function for randomforest model
+cross_validate_rf(wine, "Type", 10, "rf")
+
+## run the function for classification tree model
+cross_validate_rf(wine, "Type", 10, "ctree")
+
 ```
 
-## Analysis
 
-We obtain higher accuracy with random forest model compared to decision tree. This is because random forest tends to be more robust by
-adding more variability to the resulted trees by not only randomly selecting observations (bootstraping), but also randomly including the variables in the
-decision tress.
+
+### Conclusion
+#### plots
+- Model Complexity: The classification tree is simpler and easier to interpret but sacrifices accuracy for simplicity. In contrast, random forest is more complex, but it captures more nuances in the data and provides better overall performance.
+- Accuracy: Random forest outperforms the classification tree in terms of accuracy due to its ability to generalize better and handle the variance in the data.
+- Variable Importance: Both models identify Color and Flavanoids as crucial variables, but random forest adds further insights into the importance of Proline and Dilution, which are not as evident in the single classification tree.
+
+#### Cross-validation
+The classification tree performs reasonably well for predicting Type 1 wines, with an accuracy of over 85%. However, its performance drops for Type 2 wines, and more significantly for Type 3, where the accuracy is around 50%. This drop in accuracy for Type 3 suggests that the tree struggles to capture the patterns that distinguish Type 3 wines from others, likely due to the complexity of the data and the decision tree’s limitations in handling more complex, non-linear relationships.
+
+The Random Forest model significantly improves the accuracy of wine type prediction, achieving an overall accuracy of over 90%. The Random Forest model’s ability to combine multiple decision trees and reduce overfitting helps capture the complex relationships in the data more effectively, leading to better predictions across all wine types.
+
+
+
