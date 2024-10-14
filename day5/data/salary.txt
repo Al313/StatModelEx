@@ -1,0 +1,326 @@
+"District","districtSize","salary","experience"
+"Dubuque",3,37730.4,14.51
+"West Des Moines",3,39109.8,10.72
+"Ankeny",3,39501.1,11.67
+"Muscatine",3,38558.6,14.53
+"Marshalltown",3,39079,13.02
+"Ames",3,39141.3,12.71
+"Linn-Mar",3,42906.3,11.51
+"Clinton",3,36371.1,12.52
+"Southeast Polk",3,37834.4,11.01
+"Burlington",3,36840,14.11
+"Bettendorf",3,43232.6,3.91
+"Cedar Falls",3,39491,12.88
+"Johnston",3,32586.9,6.45
+"Mason City",3,38219.7,12.48
+"Fort Dodge",3,36004.6,13.61
+"Urbandale",3,36046.3,10.56
+"Newton",3,37431.2,11.56
+"College",3,39688.7,10.18
+"Indianola",3,36796.1,12.45
+"Pleasant Valley",3,40102.7,11.75
+"North Polk",3,38610,14.62
+"Lewis Central",3,38416.3,13.95
+"Western Dubuque",3,38543.6,17.7
+"Osage",3,38612.1,13.69
+"Fort Madison",3,35398.5,13.33
+"Waukee",3,32322.8,6.99
+"Boone",3,36725.8,11.43
+"Le Mars",3,37087.9,11.51
+"Keokuk",3,39425.8,13.63
+"Spencer",3,37628.6,12.62
+"Knoxville",3,35078.6,12.18
+"Pella",3,38122.4,14.16
+"Mount Pleasant",3,40651.5,15.23
+"Northwood-Kensett",3,33065.3,10.44
+"Fairfield",2,34181.8,12.14
+"Waverly-Shell Rock",2,38481.4,15.83
+"Glenwood",2,34618.1,9.58
+"Storm Lake",2,36615.4,9.19
+"West Delaware County",2,36459.1,11.76
+"Marion Independent",2,35080.9,9.63
+"Vinton-Shellsburg",2,34874.3,11.18
+"Grinnell-Newburg",2,32485,12.3
+"Carroll",2,37041,12.23
+"Perry",2,34620.1,12.22
+"Denison",2,37490.9,12.7
+"Charles City",2,36954.8,13.8
+"Harlan",2,38454.5,12.79
+"Winterset",2,36267.5,13.15
+"Centerville",2,34735.7,13.16
+"Washington",2,35552.8,12.78
+"Decorah",2,41148.7,15.44
+"Webster City",2,35432.8,13.33
+"Atlantic",2,36912.2,13.16
+"Benton",2,34036.6,11.94
+"Central Clinton",2,33061,10.89
+"Nevada",2,36208.4,11.69
+"South Tama County",2,32777.1,14.45
+"Independence",2,37488.4,12.28
+"Creston",2,35442.7,14.07
+"Howard-Winneshiek",2,34326,11.24
+"Maquoketa",2,34817.5,14.57
+"Odebolt-Arthur",2,37917,15.98
+"Adel-DeSoto-Minburn",2,34845.1,12.44
+"Allamakee",2,35761.8,13.15
+"Clear Lake",2,32757.1,10.81
+"Dallas Center-Grimes",2,34019.5,8.25
+"Clarke",2,32944.1,12.63
+"Estherville Lincoln",2,35680.8,12.11
+"Forest City",2,35389.4,13.29
+"Saydel",2,33463.3,7.94
+"MOC-Floyd Valley",2,35738.3,10.25
+"Chariton",2,34284.1,11.86
+"Algo",2,39830.2,14.64
+"Spirit Lake",2,36754.8,11.33
+"Ballard",2,36978.4,13.66
+"Amosa",2,35092.3,10.93
+"Red Oak",2,34985.7,13.36
+"Hampton-Dumont",2,34658.3,11.14
+"Davis County",2,30051.4,16.34
+"Union",2,32426.8,11.13
+"Albia",2,34333.9,12.58
+"Sergeant Bluff-Luton",2,39927.1,12.36
+"Clarinda Community",2,31526.4,11.58
+"Clear Creek-Ama",2,31307.5,10.76
+"New Hampton",2,35988.1,14.89
+"Cherokee",2,34256.7,12.19
+"Midland",2,33951.7,10.62
+"Carlisle",2,34301.6,12.84
+"Mount Vernon",2,36800.8,15.72
+"Roland-Story",2,39870,12.3
+"North Central",2,35836.9,12.88
+"West Liberty",2,33920.9,11.59
+"Iowa Falls",2,40136.1,19.27
+"Center Point-Urba",2,31975.8,9.59
+"Central Lee",2,37713.8,14.53
+"Monticello",2,33359.8,11.97
+"Sheldon",2,38202,11.77
+"Columbus",2,35232.1,9.84
+"Williamsburg",2,33518.3,10.79
+"Solon",2,34275.5,10.52
+"PCM",2,32154.5,12.1
+"Shendoah",2,34442.6,13.67
+"Maquoketa Valley",1,36792,15.06
+"Wilton",1,33031.5,12.81
+"Gilbert",1,37073,11.09
+"Louisa-Muscatine",1,34071.4,12.03
+"Missouri Valley",1,35154.2,16.34
+"Camanche",1,37067.8,15.91
+"Clarion-Goldfield",1,34592.9,11.47
+"Mediapolis",1,32022,13.33
+"Bondurant-Farrar",1,32692.9,11.36
+"Nora Springs-Rock Falls",1,32155.7,11.99
+"Sioux Center",1,41655.8,11.82
+"Sibley-Ocheyedan",1,37336,14.87
+"Hudson",1,41805.1,11.63
+"Eagle Grove",1,32535.4,12.67
+"North Mahaska",1,33335.9,11.28
+"Ogden",1,36131.2,11.98
+"Starmont",1,34108,13.73
+"Colfax-Mingo",1,33341.8,10.14
+"Garner-Hayfield",1,34234.6,13
+"East Marshall",1,31545.9,11.17
+"Hartley-Melvin-Sanborn",1,33424.2,9.66
+"Tipton",1,31684.5,10.62
+"Eddyville-Blakesburg",1,31681,9.39
+"Manson Northwest Webster",1,30246.2,10.78
+"West Branch",1,32090.7,8.82
+"Belmond-Klemme",1,35296.7,11.14
+"Battle Creek-Ida Grove",1,34476.8,14.94
+"Prairie Valley",1,33587.8,11.78
+"West Marshall",1,31108.5,9.4
+"shua-Plainfield",1,36215.6,15.77
+"Jesup",1,36710.3,13.81
+"Gladbrook-Reinbeck",1,33519.1,13.07
+"South O'Brien Community",1,35804.4,12.57
+"West Lyon",1,34354.7,14.02
+"Mount Ayr",1,33945.1,11.36
+"Oelwein",1,31297.7,9.98
+"Audubon",1,33791.2,13.57
+"Emmetsburg",1,34912,13.47
+"Pocahontas Area",1,34417.2,14.37
+"Northeast",1,30452.6,8.68
+"Dike-New Hartford",1,34770.8,12.43
+"Denver",1,34904.9,13.44
+"Grundy Center",1,33772.5,13.33
+"St Ansgar",1,38510.2,14.8
+"Ottumwa",1,30648.8,12.51
+"Tri-Center",1,32684.4,11.15
+"West Burlington Ind",1,32554.4,9.71
+"Wapello",1,32999.8,12.18
+"West Sioux",1,32086.8,10.58
+"Pekin",1,33455.3,11.12
+"South Hamilton",1,35973.8,13.03
+"Belle Plaine",1,32561.1,10.69
+"Sigourney",1,29124.5,8.09
+"Eldora-New Providence",1,33501.4,11.05
+"Riverside",1,32080.3,12.27
+"Lake Mills",1,35724.2,14.7
+"Mid-Prairie",1,30050.5,8.84
+"Westwood",1,32526.4,12.42
+"Underwood",1,32736.8,9.35
+"Interstate 35",1,30321.8,10.95
+"Logan-Magnolia",1,31696.4,9.78
+"West Hancock",1,32867.5,11.89
+"Central Decatur",1,29736.6,12.27
+"North Winneshiek",1,33147.4,13.14
+"Pleasantville",1,33391.4,14.73
+"BCLUW",1,33475.9,10.15
+"Griswold",1,32339.3,12.02
+"Durant",1,31194.6,12.81
+"Akron Westfield",1,31813.8,12.07
+"Wapsie Valley",1,32960.2,15.41
+"South Winneshiek",1,34778.8,15.2
+"Southern Cal",1,30921.5,9.87
+"Central Lyon",1,35775.7,16.39
+"Central",1,37654.5,19.34
+"Woodbury Central",1,34020.8,12.58
+"Sumner",1,37534.1,19.79
+"Van Buren",1,30876.8,11.67
+"Corning",1,33004.2,12.71
+"Rudd-Rockford-Marble Rk",1,33544.4,13.77
+"Iowa Valley",1,33841.7,10.37
+"Bedford",1,31067.5,12.24
+"Bellevue",1,34935.8,16.22
+"Brooklyn-Guernsey-Malcom",1,29568.5,9.85
+"A-H-S-T",1,31806.3,12.64
+"Edgewood-Colesburg",1,32525.3,13.17
+"Hinton",1,30026.6,12.11
+"Alta",1,31565,11.13
+"Lawton-Bronson",1,32794.9,13.63
+"Turkey Valley",1,33792.6,15.16
+"Alburnett",1,33223.1,13.66
+"Wall Lake View Auburn",1,30769,13.78
+"Montezuma",1,31013.5,10.63
+"Highland",1,31432.1,7.35
+"Lisbon",1,34864.7,14.24
+"Valley",1,31656.5,7.32
+"Woodward-Granger",1,31804.9,9.48
+"Madrid",1,33343.3,15.32
+"Marcus-Meriden-Cleghorn",1,32676.1,13.02
+"Rockwell City-Lytton",1,28933.8,11.33
+"Boyer Valley",1,28329,7.04
+"East Buchan",1,32845.5,16.03
+"Treynor",1,33120,13.27
+"Southeast Warren",1,29679.9,8.86
+"North Fayette",1,30590.2,14.57
+"New London",1,30956.4,12.64
+"Waco",1,32721.4,11.41
+"Boyden-Hull",1,34900.8,13.06
+"Manning",1,33926.8,12.03
+"Maple Valley",1,30132.7,10.24
+"Woodbine",1,30269.8,9.54
+"Rock Valley",1,33266.7,15.11
+"Galva-Holstein",1,32284.6,10.02
+"Danville",1,34943.5,13.24
+"Guthrie Center",1,31361.8,11.03
+"Sioux Central",1,29569.8,12.65
+"Calamus-Wheatland",1,31288.6,11.2
+"Southeast Webster",1,30710,10.89
+"Lynnville-Sully",1,31516.6,12.47
+"North Scott",1,32973.7,11.05
+"Coon Rapids-Bayard",1,31030.3,11.73
+"East Union",1,28201.7,9.2
+"Collins-Maxwell",1,29677.4,8.07
+"Harmony",1,29395,9.5
+"Twin Cedars",1,30070.8,11.79
+"River Valley",1,29228.2,11.59
+"Guttenberg",1,33004.3,13.38
+"Dunkerton",1,30847.7,10.83
+"Kingsley-Pierson",1,40151.4,12.31
+"Van Meter",1,32634.1,11.47
+"Ackley-Geneva",1,32222.7,8.7
+"Eastern Allamakee",1,29120.6,8.53
+"Hubbard-Radcliffe",1,32279.5,8.78
+"Martensdale-St Marys",1,29010.2,8.93
+"English Valleys",1,32770.4,12.19
+"Northeast Hamilton",1,34294,10.62
+"Schaller-Crestland",1,32042.2,9.87
+"Tripoli",1,36631,18.13
+"West Harrison",1,31995,12.53
+"Panorama",1,33488.7,11.19
+"Laurens-Marathon",1,33738.1,13.44
+"Central City",1,28446.4,6.65
+"Newell-Fonda",1,30849.6,11.5
+"Fremont-Mills",1,34407.6,19.48
+"Lone Tree",1,29398.3,7.24
+"Ar-We-Va",1,32824.4,12.33
+"Springville",1,29637.2,11.82
+"Riceville",1,31937.9,14.05
+"IKM",1,32115.2,11.66
+"East Central",1,31990.3,10.21
+"Villisca",1,32117.8,13.75
+"West Bend-Mallard",1,29393.8,8.38
+"H-L-V",1,35784.7,20.6
+"Norwalk",1,31543.6,14.56
+"East Greene",1,32498.3,9.88
+"Greene",1,32719.7,11.51
+"Rockwell-Swaledale",1,30260.6,10.41
+"Melcher-Dallas",1,31025.2,10.28
+"Sidney",1,30582.4,11.21
+"GMG",1,29645.1,10.95
+"Armstrong-Ringsted",1,31290,13.21
+"Glidden-Ralston",1,32567.6,15.43
+"Remsen-Union",1,28878.6,8.57
+"Seymour",1,28645.5,10.54
+"Lenox",1,30043.4,10.83
+"Fredericksburg",1,33065,12.23
+"Malvern",1,26426.3,9.33
+"North Iowa",1,31296.7,10.07
+"Baxter",1,31234.4,12.38
+"Keota",1,29571.5,11.74
+"Adair-Casey",1,29164.7,10.73
+"Clarksville",1,29064.4,9.53
+"Lamoni",1,29373.2,11.29
+"Murray",1,27542.8,6.06
+"Alden",1,29861.6,9.58
+"Moravia",1,30440.4,13.68
+"Aurelia",1,31964,11.81
+"Andrew",1,31109.1,16.63
+"Preston",1,31630.3,14.63
+"Allison-Bristow",1,28270.5,8.7
+"Farragut",1,30173.6,10.74
+"Aplington-Parkersburg",1,37843,14.74
+"Ventura",1,28254.5,7.94
+"Harris-Lake Park",1,29421.5,7.2
+"North Tama County",1,31021.7,12.44
+"Elk Horn-Kimballton",1,30159.1,11.96
+"Stanton",1,33989.6,15.32
+"Charter Oak-Ute",1,28830.2,7.23
+"Nish Valley",1,28791.4,13.13
+"Anita",1,28896.3,12.34
+"Olin Consolidated",1,29352.2,9.97
+"Hamburg",1,30396.4,12.62
+"Sheffield-Chapin",1,31983.4,16
+"George-Little Rock",1,30532.5,9.46
+"Exira",1,29050.4,12.29
+"Janesville Consolidated",1,32325.5,15.23
+"North-Linn",1,31153.2,10.24
+"Pomeroy-Palmer",1,32274.6,13.96
+"Essex",1,29995,10.52
+"Graettinger",1,27805.5,9.13
+"Mormon Trail",1,25957.6,5.97
+"Moulton-Udell",1,30653.8,13.81
+"Okoboji",1,28775.2,7.1
+"Walnut",1,29510.8,13.65
+"Ruthven-Ayrshire",1,29276.8,9.52
+"Twin Rivers",1,27815,6.7
+"Bennett",1,27046,6.43
+"C and M",1,28089.9,13.38
+"Albert City-Truesdale",1,27282.4,9.25
+"Whiting",1,30344.1,11.76
+"Garvillo",1,31393.6,13.34
+"Terril",1,30226.4,12.63
+"Paton-Churdan",1,26859.5,6.5
+"Fox Valley",1,25851.7,5.77
+"Titonka Consolidated",1,27616.9,9
+"Schleswig",1,28772.3,13.76
+"Corwith-Wesley",1,26663.4,5.8
+"Dows",1,27769.6,6.94
+"Russell",1,26359.1,6.09
+"New Market",1,28965.5,9.69
+"Diagol",1,23889.5,8.09
+"Stuart-Menlo-Dexfield",1,29088.9,6
+"East Mono",1,27898.5,8.54
+"Lineville-Clio",1,23911.7,10.72
