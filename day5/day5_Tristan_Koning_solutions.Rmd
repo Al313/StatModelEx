@@ -1,0 +1,164 @@
+```{r}
+library(ggplot2)
+library(GGally)
+library(NbClust)
+library(factoextra)
+library(ggrepel)
+library(MASS)
+library(party)
+library(randomForest)
+```
+
+
+# Problem 1
+
+## (a)
+```{r}
+# Load data
+salary <-  read.csv("day5/data/salary.txt", sep = ",", header = TRUE)
+
+# Create a factor variable for district size
+salary <- within(salary, {
+  size <- factor(districtSize, levels = c(1, 2, 3))
+})
+
+# View the structure of the data
+str(salary)
+```
+
+## (b)
+```{r}
+# Numerical summeries
+summary(salary)
+avg_salary <- mean(salary$salary)
+aggregate(salary ~ size, data = salary, mean)
+
+# Graphical summeries
+plot(salary)
+pairs(salary[c("salary", "experience", "size")])
+
+boxplot(salary ~ size, data = salary, main="Salary Distribution by District Size")
+hist(salary$salary, main = "Histogram of Salaries", xlab = "Salary")
+```
+
+The average salary is: `r avg_salary`
+
+## (c)
+```{r}
+model_A <- lm(salary ~ experience + districtSize, data = salary)
+model_B <- lm(salary ~ experience + size, data = salary)
+
+summary(model_A)
+summary(model_B)
+
+AIC(model_A, model_B)
+BIC(model_A, model_B)
+```
+
+Looking at the AIC and BIC, model A slightly outperforms model B, which is surprising given that variables districtSize and size in theory represent exactly the same information. 
+Considering the summary of both models, we can see that the linear model takes each factor of variable size in consideration with their own estimate (Intercept, size2, size3), while model A with the variable districtSize only uses one estimate which is multiplied with the districtSize.
+Therefore, we may conclude that model B slightly overfits the values because it has more variables to estimate on, and thats why we see a slight difference in performance between the models.
+
+## (d)
+```{r}
+summary(model_B)
+```
+
+Looking at the p-values we can see that all variables are significant (<2e-16). Therefore, each variable explains part of the variance and should not be dropped.
+We can interpret the Estimate as follows: The intercept is the base salary for every teacher. With each year of experience, we can add `r model_B$coefficients[2,1]`$ to the salary, and depending on the districtSize, we can do the same.
+
+## (e)
+```{r}
+model_C <- lm(salary ~ I(experience - 13) + size, data = salary)
+summary(model_C)
+```
+
+The Intercept changes, but surprisingly by more than +13. All other coefficients stay the same, and all stay significant.
+
+## (f)
+```{r}
+par(mfrow = c(2,2))
+plot(model_B)
+```
+
+Residuals vs Fitted: We can observe that the residuals are evenly spread and that there is no distinct pattern, therefore we can conclude that the data is linear.
+Q-Q Residuals: The Residuals follow the normal distribution for the most part, though both ends do deviate slightly. Still, we would argue that the error terms are normally distributed.
+Scale-Location: We observe a horizontal line which is spread equally, therefore homoscedasticity holds.
+Residuals vs Leverage: There are no points that have a particularly high leverage on the model.
+
+## (g)
+```{r}
+new_data_A <- data.frame(experience = 10, districtSize = 3)
+prediction_A <- predict(model_A, newdata = new_data_A)
+
+new_data_B <- data.frame(experience = 10, size = as.factor(3))
+prediction_B <- predict(model_B, newdata = new_data_B)
+```
+
+Prediction for Model A: `r prediction_A`
+Prediction for Model B: `r prediction_B`
+
+
+# Problem 2
+
+## (a)
+The standard error of Beta_hat_2, we can use the following formula:
+SE(Beta_hat_2) = sqrt(s^2 * (X_t * X)^-1[3,3]) = sqrt(2 * 2) = 2
+
+## (b)
+We can perform a t-test to test the Hypothesis that Beta2 = 0:
+
+```{r}
+# t-statistic
+t_stat_beta2 <- 15 / 2
+
+# p-value
+p_value_beta2 <- 2 * pt(-abs(t_stat_beta2), df = 22)
+p_value_beta2
+```
+
+We get a significant value as the p-value, therefore we can reject the hypthesis that the true value = 0.
+Note: We have 22 degrees of freedom from the number of points - number of predictors: 25 - 3 = 22
+
+## (c)
+```{r}
+# TODO: Cant solve atm
+```
+
+## (d)
+We can perform a t-test to test the Hypothesis that beta1 - beta2 = 0
+
+```{r}
+
+# t-statistic for beta1 = beta2
+t_stat_diff <- (12 - 15) / sqrt(6)
+
+# p-value 
+p_value_diff <- 2 * pt(t_stat_diff, df = 22)
+p_value_diff
+```
+
+We get a high p-value (0.23), therefore we don't reject the hypothesis that beta1 = beta2.
+
+## (e)
+```{r}
+# Total sum of squares
+SST <- 120
+
+# Residual sum of squares (SSE)
+SSE <- 2 * (25 - 3)
+
+# Regression sum of squares (SSR)
+SSR <- SST - SSE
+
+# F-statistic
+F_stat <- (SSR / 2) / (SSE / 22)
+p_value_F <- pf(F_stat, df1 = 2, df2 = 22, lower.tail = FALSE)
+
+# R-squared
+R_squared <- SSR / SST
+
+list(F_stat = F_stat, p_value_F = p_value_F, R_squared = R_squared)
+```
+
+From R_squared, we can see that 63.3% of the variance in y has been explained by the model.
