@@ -1,0 +1,928 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Exercise 3 solution},
+  pdfauthor={Tristan, Köning, Ali Movasati, Isabelle Cretton},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Exercise 3 solution}
+\author{Tristan, Köning, Ali Movasati, Isabelle Cretton}
+\date{Oct.~1st, 2024}
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Set global code chunk options}
+\NormalTok{knitr}\SpecialCharTok{::}\NormalTok{opts\_chunk}\SpecialCharTok{$}\FunctionTok{set}\NormalTok{(}\AttributeTok{warning =} \ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(cluster)}
+\FunctionTok{library}\NormalTok{(stats)}
+\FunctionTok{library}\NormalTok{(party)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: grid
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: mvtnorm
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: modeltools
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: stats4
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: strucchange
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: zoo
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'zoo'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     as.Date, as.Date.numeric
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: sandwich
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(dplyr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'dplyr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:party':
+## 
+##     where
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\CommentTok{\#install.packages("skimr")}
+\FunctionTok{library}\NormalTok{(skimr)}
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## -- Attaching core tidyverse packages ------------------------ tidyverse 2.0.0 --
+## v forcats   1.0.0     v stringr   1.5.1
+## v lubridate 1.9.3     v tibble    3.2.1
+## v purrr     1.0.2     v tidyr     1.3.1
+## v readr     2.1.5
+\end{verbatim}
+
+\begin{verbatim}
+## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## x stringr::boundary() masks strucchange::boundary()
+## x dplyr::filter()     masks stats::filter()
+## x dplyr::lag()        masks stats::lag()
+## x dplyr::where()      masks party::where()
+## i Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ggrepel)}
+\CommentTok{\#library for LDA analysis}
+\FunctionTok{library}\NormalTok{(MASS)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'MASS'
+## 
+## The following object is masked from 'package:dplyr':
+## 
+##     select
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#libraries for random forests and classification trees}
+\FunctionTok{library}\NormalTok{(rpart)        }\CommentTok{\# For classification trees}
+\FunctionTok{library}\NormalTok{(rpart.plot)}
+\FunctionTok{library}\NormalTok{(randomForest)       }\CommentTok{\# For data splitting and accuracy evaluation}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## randomForest 4.7-1.2
+## Type rfNews() to see new features/changes/bug fixes.
+## 
+## Attaching package: 'randomForest'
+## 
+## The following object is masked from 'package:ggplot2':
+## 
+##     margin
+## 
+## The following object is masked from 'package:dplyr':
+## 
+##     combine
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(caret)        }\CommentTok{\# For data splitting and accuracy evaluation}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: lattice
+## 
+## Attaching package: 'caret'
+## 
+## The following object is masked from 'package:purrr':
+## 
+##     lift
+\end{verbatim}
+
+\section{Problem 1}\label{problem-1}
+
+\subsection{Load the txt file}\label{load-the-txt-file}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Load the data}
+\NormalTok{ec\_data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"data/ec.txt"}\NormalTok{, }\AttributeTok{header =} \ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{1.A}\label{a}
+
+\subsubsection{explore and visualize the data w/ plots and
+tables}\label{explore-and-visualize-the-data-w-plots-and-tables}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Summary of the data}
+\FunctionTok{skim}\NormalTok{(ec\_data)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}ll@{}}
+\caption{Data summary}\tabularnewline
+\toprule\noalign{}
+\endfirsthead
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Name & ec\_data \\
+Number of rows & 48 \\
+Number of columns & 5 \\
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ & \\
+Column type frequency: & \\
+character & 2 \\
+numeric & 3 \\
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ & \\
+Group variables & None \\
+\end{longtable}
+
+\textbf{Variable type: character}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1944}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1389}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1944}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.0556}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.0556}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.0833}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1528}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+skim\_variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+n\_missing
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+complete\_rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+min
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+max
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+empty
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+n\_unique
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+whitespace
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+City & 0 & 1.00 & 4 & 14 & 0 & 48 & 0 \\
+SalaryCat & 2 & 0.96 & 10 & 11 & 0 & 3 & 0 \\
+\end{longtable}
+
+\textbf{Variable type: numeric}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.1443}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.1031}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.1443}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0825}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0722}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0722}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0825}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0825}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0825}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0722}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0619}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+skim\_variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+n\_missing
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+complete\_rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+mean
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+sd
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+p0
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+p25
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+p50
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+p75
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+p100
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+hist
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Work & 2 & 0.96 & 1879.91 & 174.34 & 1583.0 & 1745.25 & 1849.00 &
+1976.25 & 2375.0 & ▅▇▅▂▁ \\
+Price & 0 & 1.00 & 68.86 & 21.78 & 30.3 & 49.65 & 70.50 & 81.70 & 115.5
+& ▅▆▇▅▂ \\
+Salary & 2 & 0.96 & 39.55 & 24.76 & 2.7 & 14.38 & 43.65 & 59.70 & 100.0
+& ▇▅▇▅▁ \\
+\end{longtable}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ec\_data\_clean }\OtherTok{\textless{}{-}}\NormalTok{ ec\_data }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{na.omit}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Scatterplot of the data}
+\FunctionTok{ggplot}\NormalTok{(ec\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Work, }\AttributeTok{y =}\NormalTok{ Salary, }\AttributeTok{color =}\NormalTok{ Price)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.7}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{, }\AttributeTok{se =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{color =} \StringTok{"red"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{scale\_color\_gradient}\NormalTok{(}\AttributeTok{low =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{high =} \StringTok{"red"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Scatterplot of Work vs Salary"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"Work (Weighted Average of Working Hours)"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Salary (Index)"}\NormalTok{,}
+       \AttributeTok{color =} \StringTok{"Price Index"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `geom_smooth()` using formula = 'y ~ x'
+\end{verbatim}
+
+\includegraphics{day4_Final_files/figure-latex/unnamed-chunk-3-1.pdf}
+This plot shows a negative correlation between Work (average working
+hours) and Salary (index of earnings). Cities with higher working hours
+tend to have lower salaries. There seems to be a consistent trend where
+cities that require more work hours offer lower salaries, with Zurich
+(salary = 100) standing out as an exception with a lower work average
+and higher salary. Prices generally correlate positively with salaries,
+though not perfectly.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Boxplot of the data}
+\NormalTok{boxplot\_data }\OtherTok{\textless{}{-}}\NormalTok{ ec\_data\_clean }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{pivot\_longer}\NormalTok{(}\AttributeTok{cols =} \FunctionTok{c}\NormalTok{(Price, Salary), }
+               \AttributeTok{names\_to =} \StringTok{"Variable"}\NormalTok{, }
+               \AttributeTok{values\_to =} \StringTok{"Index"}\NormalTok{)}
+
+\CommentTok{\# Plot the boxplot}
+\FunctionTok{ggplot}\NormalTok{(boxplot\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Variable, }\AttributeTok{y =}\NormalTok{ Index, }\AttributeTok{fill =}\NormalTok{ Variable)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"Price"} \OtherTok{=} \StringTok{"\#FF9999"}\NormalTok{, }\StringTok{"Salary"} \OtherTok{=} \StringTok{"\#9999FF"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Boxplot of Price and Salary Indices"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{day4_Final_files/figure-latex/unnamed-chunk-4-1.pdf}
+The boxplot compares the distribution of Price and Salary. Price has a
+narrower spread than Salary, with a higher median value
+(\textasciitilde70) compared to the median salary (\textasciitilde40).
+The greater variability in Salary indicates that wage levels are more
+diverse across cities than price levels. Many cities face low salary
+levels despite high prices, emphasizing the cost of living challenges in
+certain cities.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Density plot of the data}
+\FunctionTok{ggplot}\NormalTok{(ec\_data\_clean, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Work, }\AttributeTok{fill =}\NormalTok{ SalaryCat)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_density}\NormalTok{(}\AttributeTok{alpha =} \FloatTok{0.5}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Density Plot of Work Hours by Salary Category"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"Work (Weighted Average of Working Hours)"}\NormalTok{,}
+       \AttributeTok{fill =} \StringTok{"Salary Category"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{day4_Final_files/figure-latex/unnamed-chunk-5-1.pdf}
+This plot shows the distribution of Work (working hours) broken down by
+SalaryCat (salary categories). The highest salary category (67.6, 100{]}
+is associated with cities that have a narrow peak in work hours, with a
+median around 1900-2000 hours. Conversely, lower salary categories (2.6,
+35.1{]} and (35.1, 67.6{]} are spread across a wider range of work
+hours, with some cities having very high work hours. Cities with higher
+salaries tend to have more standardized working hours, while cities with
+lower salaries show a broader spread in work hours, including cities
+with extremely high work burdens.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{colnames}\NormalTok{(ec\_data\_clean)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "City"      "Work"      "Price"     "Salary"    "SalaryCat"
+\end{verbatim}
+
+\subsection{1.B}\label{b}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# (remove non{-}numeric columns and scale)}
+\NormalTok{cluster\_data }\OtherTok{\textless{}{-}}\NormalTok{ ec\_data\_clean }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(Work, Price, Salary) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{scale}\NormalTok{()  }\CommentTok{\# standardize the data to mean 0 and variance 1}
+
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{111}\NormalTok{)  }\CommentTok{\# Set seed for reproducibility}
+\NormalTok{wss }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{, }\ControlFlowTok{function}\NormalTok{(k) \{ }\CommentTok{\#within{-}cluster sum of squares}
+  \FunctionTok{kmeans}\NormalTok{(cluster\_data, }\AttributeTok{centers =}\NormalTok{ k, }\AttributeTok{nstart =} \DecValTok{20}\NormalTok{)}\SpecialCharTok{$}\NormalTok{tot.withinss}
+\NormalTok{\})}
+
+\CommentTok{\# Plot the elbow method}
+\FunctionTok{ggplot}\NormalTok{(}\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{k =} \DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{, }\AttributeTok{WSS =}\NormalTok{ wss), }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ k, }\AttributeTok{y =}\NormalTok{ WSS)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{color =} \StringTok{"blue"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{color =} \StringTok{"red"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Elbow Method for K{-}means Clustering"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"Number of Clusters (K)"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Total Within{-}cluster Sum of Squares (WSS)"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{day4_Final_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{111}\NormalTok{)}
+\NormalTok{kmeans\_result }\OtherTok{\textless{}{-}} \FunctionTok{kmeans}\NormalTok{(cluster\_data, }\AttributeTok{centers =} \DecValTok{3}\NormalTok{, }\AttributeTok{nstart =} \DecValTok{20}\NormalTok{)}
+
+\CommentTok{\# Add cluster assignment to the data}
+\NormalTok{ec\_data\_clean}\SpecialCharTok{$}\NormalTok{cluster }\OtherTok{\textless{}{-}} \FunctionTok{as.factor}\NormalTok{(kmeans\_result}\SpecialCharTok{$}\NormalTok{cluster)}
+
+\CommentTok{\# Visualize clusters}
+\FunctionTok{ggplot}\NormalTok{(ec\_data\_clean, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Work, }\AttributeTok{y =}\NormalTok{ Salary, }\AttributeTok{color =}\NormalTok{ cluster)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{size =} \DecValTok{3}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_text}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{label =}\NormalTok{ City), }\AttributeTok{hjust =} \FloatTok{1.2}\NormalTok{, }\AttributeTok{vjust =} \SpecialCharTok{{-}}\FloatTok{0.5}\NormalTok{, }\AttributeTok{size =} \DecValTok{3}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Cluster Analysis of Cities Based on Work, Salary, and Price"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"Work (Weighted Average of Working Hours)"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Salary (Index)"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{day4_Final_files/figure-latex/unnamed-chunk-7-2.pdf} -
+Cluster 1 (Red): Cities in this cluster (e.g., Hong Kong, Manila,
+Bogota) are characterized by high work hours and low salaries. They
+might represent emerging markets where the cost of living and salaries
+are lower, but work demands are higher. - Cluster 2 (Blue): Cities like
+Mexico City, Seoul, and Athens are similar in that they have moderate
+working hours and moderate to low salaries. These cities often show a
+developing or transitional economic status. - Cluster 3 (Green): Cities
+like Zurich, New York, and Tokyo are similar in offering high salaries
+and lower working hours, suggesting that they are developed economies
+with better work-life balance and higher living standards.
+
+\subsection{1.C}\label{c}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{pca }\OtherTok{\textless{}{-}} \FunctionTok{prcomp}\NormalTok{(cluster\_data, }\AttributeTok{scale =} \ConstantTok{TRUE}\NormalTok{)}
+
+\NormalTok{loadings }\OtherTok{\textless{}{-}}\NormalTok{ pca}\SpecialCharTok{$}\NormalTok{rotation}
+\NormalTok{loadings\_data }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{Variable =} \FunctionTok{rownames}\NormalTok{(loadings), }\AttributeTok{PC1 =}\NormalTok{ loadings[, }\DecValTok{1}\NormalTok{], }\AttributeTok{PC2 =}\NormalTok{ loadings[, }\DecValTok{2}\NormalTok{])}
+
+\CommentTok{\# perform Dimensionality reduction}
+\NormalTok{scores }\OtherTok{\textless{}{-}}\NormalTok{ pca}\SpecialCharTok{$}\NormalTok{x}
+\NormalTok{pca\_data }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{City =}\NormalTok{ ec\_data\_clean}\SpecialCharTok{$}\NormalTok{City, }\AttributeTok{PC1 =}\NormalTok{ scores[, }\DecValTok{1}\NormalTok{], }\AttributeTok{PC2 =}\NormalTok{ scores[, }\DecValTok{2}\NormalTok{])}
+
+\CommentTok{\# plot the PCA biplot}
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data =}\NormalTok{ pca\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ PC1, }\AttributeTok{y =}\NormalTok{ PC2, }\AttributeTok{color =}\NormalTok{ ec\_data\_clean}\SpecialCharTok{$}\NormalTok{cluster)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_text\_repel}\NormalTok{(}\AttributeTok{data =}\NormalTok{ pca\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ PC1, }\AttributeTok{y =}\NormalTok{ PC2, }\AttributeTok{label =}\NormalTok{ City)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_segment}\NormalTok{(}\AttributeTok{data =}\NormalTok{ loadings\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =} \DecValTok{0}\NormalTok{, }\AttributeTok{y =} \DecValTok{0}\NormalTok{, }\AttributeTok{xend =}\NormalTok{ PC1, }\AttributeTok{yend =}\NormalTok{ PC2),}
+               \AttributeTok{arrow =} \FunctionTok{arrow}\NormalTok{(}\AttributeTok{length =} \FunctionTok{unit}\NormalTok{(}\FloatTok{0.3}\NormalTok{, }\StringTok{"cm"}\NormalTok{)), }\AttributeTok{color =} \StringTok{"red"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_text\_repel}\NormalTok{(}\AttributeTok{data =}\NormalTok{ loadings\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ PC1, }\AttributeTok{y =}\NormalTok{ PC2, }\AttributeTok{label =}\NormalTok{ Variable), }\AttributeTok{color =} \StringTok{"red"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"PCA Biplot of Cities Based on Work, Salary, and Price"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"PC1"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"PC2"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{day4_Final_files/figure-latex/unnamed-chunk-8-1.pdf}
+The PCA biplot reveals how cities differ in terms of Work, Salary, and
+Price by projecting them onto two principal components (PC1 and PC2).
+PC1 primarily captures the variation in working hours, with cities like
+Hong Kong and Manila positioned on the right, indicating high working
+hours, while cities like Zurich and Geneva are on the left, showing
+fewer working hours. PC2 captures the variation in salary and price,
+with cities like Lisbon and Rio de Janeiro higher on the plot,
+indicating higher salary and price levels, while Bombay and Seoul show
+lower values. The biplot visually confirms the clustering pattern, where
+cities with similar work-life and economic profiles are grouped
+together, such as high-salary, low-work cities in Cluster 3 (green) and
+high-work, low-salary cities in Cluster 1 (red).
+
+\subsection{1.D (LDA \& QDA)}\label{d-lda-qda}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data }\OtherTok{\textless{}{-}}\NormalTok{ ec\_data\_clean }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(Work, Price, SalaryCat) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{na.omit}\NormalTok{()  }\CommentTok{\# Remove rows with missing data}
+
+\CommentTok{\# Convert SalaryCat to a factor}
+\NormalTok{data}\SpecialCharTok{$}\NormalTok{SalaryCat }\OtherTok{\textless{}{-}} \FunctionTok{as.factor}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{SalaryCat)}
+
+\CommentTok{\# LDA model}
+\NormalTok{lda\_model }\OtherTok{\textless{}{-}} \FunctionTok{lda}\NormalTok{(SalaryCat }\SpecialCharTok{\textasciitilde{}}\NormalTok{ Work }\SpecialCharTok{+}\NormalTok{ Price, }\AttributeTok{data =}\NormalTok{ data)}
+
+\CommentTok{\# Create a grid of values for Work and Price to plot decision boundaries}
+\NormalTok{x\_min }\OtherTok{\textless{}{-}} \FunctionTok{min}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{Work) }\SpecialCharTok{{-}} \DecValTok{1}
+\NormalTok{x\_max }\OtherTok{\textless{}{-}} \FunctionTok{max}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{Work) }\SpecialCharTok{+} \DecValTok{1}
+\NormalTok{y\_min }\OtherTok{\textless{}{-}} \FunctionTok{min}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{Price) }\SpecialCharTok{{-}} \DecValTok{1}
+\NormalTok{y\_max }\OtherTok{\textless{}{-}} \FunctionTok{max}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{Price) }\SpecialCharTok{+} \DecValTok{1}
+
+\NormalTok{grid }\OtherTok{\textless{}{-}} \FunctionTok{expand.grid}\NormalTok{(}\AttributeTok{Work =} \FunctionTok{seq}\NormalTok{(x\_min, x\_max, }\AttributeTok{length.out =} \DecValTok{100}\NormalTok{),}
+                    \AttributeTok{Price =} \FunctionTok{seq}\NormalTok{(y\_min, y\_max, }\AttributeTok{length.out =} \DecValTok{100}\NormalTok{))}
+
+\CommentTok{\# Predict class probabilities and categories for LDA and QDA}
+\NormalTok{lda\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(lda\_model, grid)}
+\NormalTok{grid}\SpecialCharTok{$}\NormalTok{lda\_class }\OtherTok{\textless{}{-}}\NormalTok{ lda\_pred}\SpecialCharTok{$}\NormalTok{class}
+
+\CommentTok{\# Plot LDA decision boundaries}
+\NormalTok{lda\_plot }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data =}\NormalTok{ grid, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Work, }\AttributeTok{y =}\NormalTok{ Price, }\AttributeTok{color =}\NormalTok{ lda\_class), }\AttributeTok{alpha =} \FloatTok{0.3}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data =}\NormalTok{ data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Work, }\AttributeTok{y =}\NormalTok{ Price, }\AttributeTok{color =}\NormalTok{ SalaryCat)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"LDA: Work vs Price Decision Boundary"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"Work (Weighted Average of Working Hours)"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Price (Index)"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+
+\NormalTok{lda\_plot}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{day4_Final_files/figure-latex/unnamed-chunk-9-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#qda}
+\NormalTok{qda\_model }\OtherTok{\textless{}{-}} \FunctionTok{qda}\NormalTok{(SalaryCat }\SpecialCharTok{\textasciitilde{}}\NormalTok{ Work }\SpecialCharTok{+}\NormalTok{ Price, }\AttributeTok{data =}\NormalTok{ data)}
+
+\NormalTok{qda\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(qda\_model, grid)}
+\NormalTok{grid}\SpecialCharTok{$}\NormalTok{qda\_class }\OtherTok{\textless{}{-}}\NormalTok{ qda\_pred}\SpecialCharTok{$}\NormalTok{class}
+
+
+\CommentTok{\# Plot QDA decision boundaries}
+\NormalTok{qda\_plot }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data =}\NormalTok{ grid, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Work, }\AttributeTok{y =}\NormalTok{ Price, }\AttributeTok{color =}\NormalTok{ qda\_class), }\AttributeTok{alpha =} \FloatTok{0.3}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data =}\NormalTok{ data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Work, }\AttributeTok{y =}\NormalTok{ Price, }\AttributeTok{color =}\NormalTok{ SalaryCat)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"QDA: Work vs Price Decision Boundary"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"Work (Weighted Average of Working Hours)"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Price (Index)"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
+
+\NormalTok{qda\_plot}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{day4_Final_files/figure-latex/unnamed-chunk-10-1.pdf}
+\#\#\# LDA vs QDA
+
+\paragraph{LDA}\label{lda}
+
+The salary categories (35.1, 67.6{]} (green) and (67.6, 100{]} (blue)
+are more clearly separated. The linear boundary works well in this case,
+especially in the middle and upper categories. For example, the green
+region is formed between about 1700 and 2100 work hours, while blue is
+in the lower working hours and higher prices. However, the lower salary
+category (2.6, 35.1{]} (red) tends to dominate more at the extreme
+ranges of Work.
+
+\paragraph{QDA}\label{qda}
+
+The regions are similar to LDA, but QDA produces more curved and nuanced
+boundaries, especially in areas where there might be overlaps between
+salary categories. The flexibility of QDA allows for a more detailed
+separation in these regions. For example, the red region expands
+differently in QDA, accommodating some data points that were likely
+misclassified in LDA due to its rigid linear constraints.
+
+\subsubsection{Conclusion}\label{conclusion}
+
+For this data, QDA fits better. We can see that it effectively captures
+the non-linear relationships between Work and Price (this is especially
+marked for our Blue class, which LDA ineffectively captured), providing
+more detailed decision boundaries that better separate the salary
+categories. LDA, while useful for linearly separable data, struggles
+with the complexity of this dataset, leading to some misclassifications
+and less distinct boundaries.
+
+\subsection{1.E}\label{e}
+
+\begin{itemize}
+\tightlist
+\item
+  EDA provided insights into the relationships between Work, Salary, and
+  Price, showing clear patterns across cities.
+\item
+  K-means clustering revealed three distinct groups of cities with
+  different economic profiles based on their work hours and salary
+  levels.
+\item
+  PCA reduced the dimensionality of the data and visualized how these
+  cities are distributed across the two main sources of variation (Work
+  and Salary/Price), confirming the clustering results.
+\item
+  LDA and QDA provided classification models for predicting salary
+  categories based on Work and Price. QDA's quadratic boundaries offered
+  superior classification accuracy, while LDA's linear approach
+  struggled with the non-linear relationships in the data. QDA proved to
+  be the most effective classification method for this dataset, while
+  PCA and K-means clustering provided strong tools for understanding the
+  structure of the data and identifying patterns among cities.
+\end{itemize}
+
+\section{Problem 2 (classification trees \& random
+forests)}\label{problem-2-classification-trees-random-forests}
+
+\subsection{Load the R data file}\label{load-the-r-data-file}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Load the data}
+\FunctionTok{load}\NormalTok{(}\StringTok{"data/wine.RData"}\NormalTok{)}
+\CommentTok{\# Check the structure of the data}
+\FunctionTok{str}\NormalTok{(wine)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 'data.frame':    178 obs. of  14 variables:
+##  $ Type           : Factor w/ 3 levels "1","2","3": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ Alcohol        : num  14.2 13.2 13.2 14.4 13.2 ...
+##  $ Malic          : num  1.71 1.78 2.36 1.95 2.59 1.76 1.87 2.15 1.64 1.35 ...
+##  $ Ash            : num  2.43 2.14 2.67 2.5 2.87 2.45 2.45 2.61 2.17 2.27 ...
+##  $ Alcalinity     : num  15.6 11.2 18.6 16.8 21 15.2 14.6 17.6 14 16 ...
+##  $ Magnesium      : int  127 100 101 113 118 112 96 121 97 98 ...
+##  $ Phenols        : num  2.8 2.65 2.8 3.85 2.8 3.27 2.5 2.6 2.8 2.98 ...
+##  $ Flavanoids     : num  3.06 2.76 3.24 3.49 2.69 3.39 2.52 2.51 2.98 3.15 ...
+##  $ Nonflavanoids  : num  0.28 0.26 0.3 0.24 0.39 0.34 0.3 0.31 0.29 0.22 ...
+##  $ Proanthocyanins: num  2.29 1.28 2.81 2.18 1.82 1.97 1.98 1.25 1.98 1.85 ...
+##  $ Color          : num  5.64 4.38 5.68 7.8 4.32 6.75 5.25 5.05 5.2 7.22 ...
+##  $ Hue            : num  1.04 1.05 1.03 0.86 1.04 1.05 1.02 1.06 1.08 1.01 ...
+##  $ Dilution       : num  3.92 3.4 3.17 3.45 2.93 2.85 3.58 3.58 2.85 3.55 ...
+##  $ Proline        : int  1065 1050 1185 1480 735 1450 1290 1295 1045 1045 ...
+\end{verbatim}
+
+\subsection{2.A}\label{a-1}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{111}\NormalTok{)}
+\CommentTok{\# Split the data into training and testing sets}
+\NormalTok{train\_index }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(wine), }\FloatTok{0.7} \SpecialCharTok{*} \FunctionTok{nrow}\NormalTok{(wine))}
+\NormalTok{train\_data }\OtherTok{\textless{}{-}}\NormalTok{ wine[train\_index, ]}
+\NormalTok{test\_data }\OtherTok{\textless{}{-}}\NormalTok{ wine[}\SpecialCharTok{{-}}\NormalTok{train\_index, ]}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{classification trees}\label{classification-trees}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tree\_model }\OtherTok{\textless{}{-}} \FunctionTok{rpart}\NormalTok{(Type }\SpecialCharTok{\textasciitilde{}}\NormalTok{ ., }\AttributeTok{data =}\NormalTok{ train\_data, }\AttributeTok{method =} \StringTok{"class"}\NormalTok{)}
+\NormalTok{tree\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(tree\_model, test\_data, }\AttributeTok{type =} \StringTok{"class"}\NormalTok{)}
+\NormalTok{confusion\_matrix\_tree }\OtherTok{\textless{}{-}} \FunctionTok{table}\NormalTok{(tree\_pred, test\_data}\SpecialCharTok{$}\NormalTok{Type)}
+\NormalTok{confusion\_matrix\_tree}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          
+## tree_pred  1  2  3
+##         1 14  2  1
+##         2  3 16  0
+##         3  0  1 17
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tree\_accuracy }\OtherTok{\textless{}{-}} \FunctionTok{confusionMatrix}\NormalTok{(tree\_pred, test\_data}\SpecialCharTok{$}\NormalTok{Type)}\SpecialCharTok{$}\NormalTok{overall[}\StringTok{"Accuracy"}\NormalTok{]}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{"Classification Tree Accuracy:"}\NormalTok{, }\FunctionTok{round}\NormalTok{(tree\_accuracy }\SpecialCharTok{*} \DecValTok{100}\NormalTok{, }\DecValTok{2}\NormalTok{), }\StringTok{"\%"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Classification Tree Accuracy: 87.04 %"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{rpart.plot}\NormalTok{(tree\_model, }\AttributeTok{main =} \StringTok{"Classification Tree for Wine Data"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{day4_Final_files/figure-latex/unnamed-chunk-13-1.pdf}
+
+\subsection{Random Forest}\label{random-forest}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rf\_model }\OtherTok{\textless{}{-}} \FunctionTok{randomForest}\NormalTok{(Type }\SpecialCharTok{\textasciitilde{}}\NormalTok{ ., }\AttributeTok{data =}\NormalTok{ train\_data, }\AttributeTok{ntree =} \DecValTok{500}\NormalTok{, }\AttributeTok{mtry =} \DecValTok{3}\NormalTok{, }\AttributeTok{importance =} \ConstantTok{TRUE}\NormalTok{)}
+
+\CommentTok{\# Predict on the test set}
+\NormalTok{rf\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(rf\_model, test\_data)}
+
+\CommentTok{\# eval}
+\NormalTok{rf\_accuracy }\OtherTok{\textless{}{-}} \FunctionTok{confusionMatrix}\NormalTok{(rf\_pred, test\_data}\SpecialCharTok{$}\NormalTok{Type)}\SpecialCharTok{$}\NormalTok{overall[}\StringTok{"Accuracy"}\NormalTok{]}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{"Random Forest Accuracy:"}\NormalTok{, }\FunctionTok{round}\NormalTok{(rf\_accuracy }\SpecialCharTok{*} \DecValTok{100}\NormalTok{, }\DecValTok{2}\NormalTok{), }\StringTok{"\%"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Random Forest Accuracy: 98.15 %"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{varImpPlot}\NormalTok{(rf\_model, }\AttributeTok{main =} \StringTok{"Variable Importance in Random Forest Model"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{day4_Final_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+\subsection{Cross Validation}\label{cross-validation}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{111}\NormalTok{)}
+\NormalTok{cross\_validate }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(data, dependent\_var, }\AttributeTok{n\_folds =} \DecValTok{10}\NormalTok{, model\_type) \{}
+  \CommentTok{\# Setup}
+\NormalTok{  folds }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\NormalTok{n\_folds, }\AttributeTok{length.out =} \FunctionTok{nrow}\NormalTok{(data)))}
+\NormalTok{  accuracy }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(n\_folds)}
+\NormalTok{  precision }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(n\_folds)}
+\NormalTok{  sensitivity }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(n\_folds)}
+
+
+  \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{n\_folds) \{}
+    \CommentTok{\# Setup test / training data}
+\NormalTok{    train\_indices }\OtherTok{\textless{}{-}} \FunctionTok{which}\NormalTok{(folds }\SpecialCharTok{!=}\NormalTok{ i)}
+\NormalTok{    test\_indices }\OtherTok{\textless{}{-}} \FunctionTok{which}\NormalTok{(folds }\SpecialCharTok{==}\NormalTok{ i)}
+
+\NormalTok{    train\_data }\OtherTok{\textless{}{-}}\NormalTok{ data[train\_indices, ]}
+\NormalTok{    test\_data }\OtherTok{\textless{}{-}}\NormalTok{ data[test\_indices, ]}
+
+    \CommentTok{\# Create model}
+    \ControlFlowTok{if}\NormalTok{ (model\_type }\SpecialCharTok{==} \StringTok{"ctree"}\NormalTok{) \{}
+\NormalTok{      model }\OtherTok{\textless{}{-}} \FunctionTok{ctree}\NormalTok{(}\FunctionTok{as.formula}\NormalTok{(}\FunctionTok{paste}\NormalTok{(dependent\_var, }\StringTok{"\textasciitilde{} ."}\NormalTok{)), }\AttributeTok{data=}\NormalTok{train\_data)}
+\NormalTok{    \}}
+    \ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (model\_type }\SpecialCharTok{==} \StringTok{"randomForest"}\NormalTok{)\{}
+\NormalTok{      model }\OtherTok{\textless{}{-}} \FunctionTok{randomForest}\NormalTok{(}\FunctionTok{as.formula}\NormalTok{(}\FunctionTok{paste}\NormalTok{(dependent\_var, }\StringTok{"\textasciitilde{} ."}\NormalTok{)), }\AttributeTok{data=}\NormalTok{train\_data)}
+\NormalTok{    \}}
+
+    \CommentTok{\# Predict}
+\NormalTok{    predictions }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(model, test\_data)}
+\NormalTok{    confusion\_matrix }\OtherTok{\textless{}{-}} \FunctionTok{table}\NormalTok{(predictions, test\_data[[dependent\_var]])}
+\NormalTok{    accuracy[i] }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(}\FunctionTok{diag}\NormalTok{(confusion\_matrix)) }\SpecialCharTok{/} \FunctionTok{sum}\NormalTok{(confusion\_matrix)}
+\NormalTok{    precision[i] }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(}\FunctionTok{diag}\NormalTok{(confusion\_matrix) }\SpecialCharTok{/} \FunctionTok{colSums}\NormalTok{(confusion\_matrix), }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{    sensitivity[i] }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(}\FunctionTok{diag}\NormalTok{(confusion\_matrix) }\SpecialCharTok{/} \FunctionTok{rowSums}\NormalTok{(confusion\_matrix), }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{  \}}
+
+  \CommentTok{\# Print results}
+  \FunctionTok{list}\NormalTok{ (}
+    \AttributeTok{accuracy =} \FunctionTok{mean}\NormalTok{(accuracy),}
+    \AttributeTok{precision =} \FunctionTok{mean}\NormalTok{(precision),}
+    \AttributeTok{sensitivity =} \FunctionTok{mean}\NormalTok{(sensitivity)}
+\NormalTok{  )}
+\NormalTok{\}}
+
+\NormalTok{results\_ctree }\OtherTok{\textless{}{-}} \FunctionTok{cross\_validate}\NormalTok{(wine, }\StringTok{"Type"}\NormalTok{, }\AttributeTok{model\_type =} \StringTok{"ctree"}\NormalTok{)}
+\NormalTok{results\_random\_forest }\OtherTok{\textless{}{-}} \FunctionTok{cross\_validate}\NormalTok{(wine, }\StringTok{"Type"}\NormalTok{, }\AttributeTok{model\_type =} \StringTok{"randomForest"}\NormalTok{)}
+
+\FunctionTok{list}\NormalTok{(}
+  \AttributeTok{results\_ctree =}\NormalTok{ results\_ctree,}
+  \AttributeTok{results\_random\_forest =}\NormalTok{ results\_random\_forest}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## $results_ctree
+## $results_ctree$accuracy
+## [1] 0.8986928
+## 
+## $results_ctree$precision
+## [1] 0.8890873
+## 
+## $results_ctree$sensitivity
+## [1] 0.893955
+## 
+## 
+## $results_random_forest
+## $results_random_forest$accuracy
+## [1] 0.9826797
+## 
+## $results_random_forest$precision
+## [1] 0.9896296
+## 
+## $results_random_forest$sensitivity
+## [1] 0.9811111
+\end{verbatim}
+
+\subsection{Analysis}\label{analysis}
+
+We obtain higher accuracy with random forest model compared to decision
+tree. This is because random forest tends to be more robust by adding
+more variability to the resulted trees by not only randomly selecting
+observations (bootstraping), but also randomly including the variables
+in the decision tress.
+
+\end{document}
