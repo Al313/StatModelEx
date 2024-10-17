@@ -1,0 +1,205 @@
+---
+title:  
+    "Day5 exercise solutions"
+date: 
+    "Oct. 14th, 2024"
+author:  
+    "Ali Movasati"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+---
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+
+```{r libraries}
+
+
+# load required libraries
+library(skimr)
+library(ggplot2)
+library(ggpubr)
+library(magrittr)
+library(dplyr)
+library(tibble)
+
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Problem 1
+
+```{r}
+
+# read in the data
+
+salary <- read.table(file = "/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/StatModelEx/day5/data/salary.txt", sep = ",", header = T)
+
+
+
+```
+
+
+## 1.A)
+
+
+```{r}
+
+salary %<>% mutate(size = factor(districtSize)) %>%
+            select(-districtSize)
+
+
+```
+
+
+## 1.B) 
+
+
+- Numerical summary
+
+```{r}
+# summary of dataset
+skim(salary)
+
+
+```
+
+The average salary in USD is `r mean(salary$salary)` and in CHF is `r mean(salary$salary)*0.87`!
+
+
+- Graphical summary
+
+```{r}
+# visualize the dataset
+
+
+## scatter plot
+salary %>% 
+    ggplot(aes(x = experience, y = salary, color = size)) +
+    geom_point(size = 3) +
+    theme_bw()
+
+## boxplots
+
+
+bxp1 <- salary %>% 
+    ggplot(aes(x = size, y = salary, color = size)) +
+    geom_boxplot() +
+    stat_compare_means(ref.group = "1", method = "t.test") +
+    theme_bw() + 
+    theme(legend.position = "none")
+
+bxp2 <- salary %>% 
+    ggplot(aes(x = size, y = experience, color = size)) +
+    geom_boxplot() +
+    stat_compare_means(ref.group = "1", method = "t.test") +
+    theme_bw()
+
+# Arrange the plots side by side
+grid.arrange(bxp1, bxp2, ncol = 2)
+
+
+
+```
+
+
+## 1.C)
+
+```{r}
+
+
+```
+
+
+## 1.D)
+
+```{r}
+
+
+```
+
+
+## 1.E)
+
+```{r}
+
+
+```
+
+
+## 1.F)
+
+```{r}
+
+
+```
+
+
+## 1.G)
+
+```{r}
+
+
+```
+
+
+---
+
+# Problem 2
+
+```{r}
+
+
+```
+
+
+
+## 2.A)
+
+```{r}
+
+
+```
+
+
+## 2.B)
+
+```{r}
+
+
+```
+
+
+## 2.C)
+
+```{r}
+
+
+```
+
+
+## 2.D)
+
+```{r}
+
+
+```
+
+
+## 2.E)
+
+```{r}
+
+
+```
+
