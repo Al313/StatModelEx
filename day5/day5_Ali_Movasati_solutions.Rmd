@@ -55,8 +55,7 @@ salary <- read.table(file = "/Users/alimos313/Documents/studies/phd/university/c
 
 ```{r}
 
-salary %<>% mutate(size = factor(districtSize)) %>%
-            select(-districtSize)
+salary %<>% mutate(size = factor(districtSize))
 
 
 ```
@@ -117,41 +116,116 @@ grid.arrange(bxp1, bxp2, ncol = 2)
 
 ```{r}
 
+# fit models
+
+model_a <- lm(salary ~ 1 + experience + districtSize, data = salary)
+model_b <- lm(salary ~ 1 + experience + size, data = salary)
+
+## model A
+
+summary(model_a)
+
+
+## model A
+
+summary(model_b)
 
 ```
+
+### << comments >>
+
+The two models are similar in terms of their goodness-of-fit values. Model A has one degree of freedom lower as it
+treats districtSize as one independent variable, while model B treats factorized size variable as 2.
 
 
 ## 1.D)
 
 ```{r}
 
+# save model summary in an object
+summary_b <- summary(model_b)
+
+
 
 ```
+
+### << comments >>
+
+The adjusted coefficient of determination for model B is `r summary_b$adj.r.squared`. Therefore, `r summary_b$adj.r.squared*100`%
+of variability in the response variable salary can be explained by the proposed linear regression model.
+
+Given p-values < 0.05, it indicates that all predictors has a significant effect on the dependent variable. Therefore, it is not advisable to drop any of the predictor variables.
+
+The parameter estimate for variable "experience" is `r summary_b$coefficients[2,"Estimate"]`. That means for 1 year additional experience, given the district is the same,
+the salary will be increase by `r summary_b$coefficients[2,"Estimate"]`.
+
+The parameter estimate for variable "district 2" is `r summary_b$coefficients[3,"Estimate"]`. That means for the same level of experience, teachers in district size 2, 
+earn `r summary_b$coefficients[3,"Estimate"]` USD more than teachers in the reference district of size 1.
+
+The parameter estimate for variable "district 3" is `r summary_b$coefficients[4,"Estimate"]`. That means for the same level of experience, teachers in district size 3, 
+earn `r summary_b$coefficients[4,"Estimate"]` USD more than teachers in the reference district of size 1.
+
+
 
 
 ## 1.E)
 
 ```{r}
 
+model_b_transformed <- lm(salary ~ I(experience - 13) + size, data = salary)
+
+summary(model_b_transformed)
 
 ```
+
+### << comments >>
+
+When we modify the model by using "experience - 13" instead of experience, 
+the interpretation of the coefficient for intercept and experience will change, but the overall fit and statistical properties of the model (likeR^2, adjusted R^2, p-values) will remain unchanged.
+
+The coefficient for I(experience - 13) will now represent the change in salary for each year of experience compared to 13 years, 
+and the intercept will reflect the average salary when the experience is 13 years, rather than 0 years.
+
+Intercept: In the original model, the intercept represents the expected salary when experience = 0. 
+This can be less meaningful if no teachers in the dataset have exactly 0 years of experience. 
+By shifting the experience to center it around 13 years, the intercept will now represent the expected salary for a teacher with 13 years of experience.
 
 
 ## 1.F)
 
 ```{r}
 
+# Plot diagnostic plots
+par(mfrow = c(2, 2))  # Arrange 4 diagnostic plots
+plot(model_b)
+
 
 ```
+
+
+
+### << comments >>
+
+- based on the residuals vs fitted plot we can confirm linear relationship between the response and predictor variables
+
+- based on Q-Q Plot for Residuals we can confirm normality of error term of our linear regression model
+
+- based on scale-location plot we can confirm homoscedasticity of the residuals across all levels of the independent variables
 
 
 ## 1.G)
 
 ```{r}
 
+new_data_a <- data.frame(experience = c(10), districtSize = c(3))
+new_data_b <- data.frame(experience = c(10), size = c("3"))
+
 
 ```
 
+### << comments >>
+
+According to model A the predicted salary will be `r predict(model_a, newdata = new_data_a)` and according to model B `r predict(model_b, newdata = new_data_b)`
 
 ---
 
