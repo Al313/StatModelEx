@@ -26,7 +26,7 @@ library(lmtest)
 ### 1.A Read and Process Data
 ```{r}
 # Read the data
-salary_data <- read.table("day5/data/salary.txt", header = TRUE, sep = ",", quote = "\"")
+salary_data <- read.table("data/salary.txt", header = TRUE, sep = ",", quote = "\"")
 
 # Create a factor variable for district size
 salary_data$size <- factor(salary_data$districtSize, 
