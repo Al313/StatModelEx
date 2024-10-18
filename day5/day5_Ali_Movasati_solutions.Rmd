@@ -217,63 +217,136 @@ plot(model_b)
 
 ```{r}
 
-new_data_a <- data.frame(experience = c(10), districtSize = c(3))
-new_data_b <- data.frame(experience = c(10), size = c("3"))
+example_data_a <- data.frame(experience = c(10), districtSize = c(3))
+example_data_b <- data.frame(experience = c(10), size = c("3"))
 
 
 ```
 
 ### << comments >>
 
-According to model A the predicted salary will be `r predict(model_a, newdata = new_data_a)` and according to model B `r predict(model_b, newdata = new_data_b)`
+According to model A the predicted salary will be `r predict(model_a, newdata = example_data_a)` and according to model B `r predict(model_b, newdata = example_data_b)`
 
 ---
 
 # Problem 2
 
-```{r}
-
-
-```
-
-
-
 ## 2.A)
 
+we have the following formule:
+
+SE(B^j) = sqrt(s**2.(XTX)^-1jj)
+
+Therefore, we need the third element of the diagonal of the given matrix to compute SE which is `r sqrt()
 ```{r}
 
+s2 <- 2
+
+mat <- matrix(c(1,0.25,0.25,0.25,0.5,-0.25, 0.25, -0.25, 2), byrow = 3, ncol = 3)
 
 ```
 
+Therefore, we need the third element of the diagonal of the given matrix to compute SE which is `r sqrt(s2*mat[3,3])`
 
 ## 2.B)
 
+To test the hypothesis that 𝛽2=0 we will use a t-test for the regression coefficient 𝛽^2.
+
+Hypotheses:
+Null Hypothesis (𝐻0): 𝛽2=0 (there is no effect of the predictor 𝑥2)
+Alternative Hypothesis (𝐻𝐴): 𝛽2≠0 (there is a significant effect of 𝑥2).
+
+Test Statistic:
+
+The test statistic for the hypothesis test is calculated as:
+
+𝑡=𝛽^2/𝑆𝐸(𝛽^2)
+
+
 ```{r}
+
+b2 <- 15
+se_b2 <- sqrt(s2*mat[3,3])
+t_statistic <- b2/se_b2
+
+# degree of freedom
+
+df <- 25 - 3
+
+
+# get p.value
+
+2 * pt(-7.5, df = 22)
 
 
 ```
 
+since the p-value is smaller than 0.05, we reject the null hypothesis, concluding that 𝛽2≠0 and therefore 𝑥2 has a significant effect on y. 
 
 ## 2.C)
+cov(𝛽1,𝛽2) is the (2,3) of covariance matrix times s^2, therefore it is `r mat[2,3]*s2`
 
 ```{r}
 
+# formula for getting the SE of (B1-B2)
+
+se_deduction <- sqrt(mat[2,2]*s2+mat[3,3]*s2-2*mat[2,3]*s2)
 
 ```
 
+The standard error of βˆ1 − βˆ2 is `r se_deduction`
 
 ## 2.D)
 
+To test the hypothesis that 𝛽1=𝛽2 we will use a t-test as follow:
+
+Hypotheses:
+Null Hypothesis (𝐻0): 𝛽1=𝛽2 
+Alternative Hypothesis (𝐻𝐴): 𝛽1≠𝛽2
+
+Test Statistic:
+
+The test statistic for the hypothesis test is calculated as:
+
+𝑡=(𝛽^1-𝛽^2)/𝑆𝐸(𝛽^1-𝛽^2)
+
 ```{r}
 
+b1 <- 12
+b2 <- 15
+t_statistic <- (b1-b2)/se_deduction
+
+2 * pt(-abs(t_statistic), df = 22)
 
 ```
 
+The p-value is greater than 0.05, therefore we fail to reject the null hypothesis and conclude that there is no significant difference between 𝛽^1 and 𝛽^2
 
 ## 2.E)
 
 ```{r}
 
+sst <- 120
+sse <- s2*df
+
+ssr <- sst - sse
 
 ```
 
+
+SSR or the percentage of variation in y that is explained by the model is `r ssr/sst`%
+
+
+
+```{r}
+
+msr <- ssr/2
+mse <- sse/22
+
+f_statistic <- msr/mse
+
+pf(f_statistic, df1 = 2, df2 = 22, lower.tail = FALSE)
+
+```
+
+The p-value is lower than 0.05 therefore the H0 (𝛽^1=𝛽^2=0) can be rejected. This means that the model with both predictors significantly explains the variation in the response variable y.
