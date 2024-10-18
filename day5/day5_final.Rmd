@@ -4,11 +4,12 @@ title:
 date: 
     "Oct. 14th, 2024"
 author:  
-    "Ali Movasati"  
+    "Ali Movasati, Isabelle Cretton, Tristan Koning"  
 output:  
     pdf_document:
         latex_engine: xelatex
 ---
+
 
 
 ```{r global options}
@@ -17,6 +18,7 @@ output:
 knitr::opts_chunk$set(warning = FALSE)
 
 ```
+
 
 
 ```{r libraries}
@@ -73,20 +75,11 @@ skim(salary)
 
 ```
 
-The average salary in USD is `r mean(salary$salary)` and in CHF is `r mean(salary$salary)*0.87`!
-
-
-- Graphical summary
 
 ```{r}
-# visualize the dataset
 
-
-## scatter plot
-salary %>% 
-    ggplot(aes(x = experience, y = salary, color = size)) +
-    geom_point(size = 3) +
-    theme_bw()
+# Graphical summeries
+pairs(salary[c("salary", "experience", "size")])
 
 ## boxplots
 
@@ -108,11 +101,10 @@ bxp2 <- salary %>%
 grid.arrange(bxp1, bxp2, ncol = 2)
 
 
-
+hist(salary$salary, main = "Histogram of Salaries", xlab = "Salary")
 ```
 
 
-## 1.C)
 
 ```{r}
 
@@ -132,10 +124,24 @@ summary(model_b)
 
 ```
 
+
+
 ### << comments >>
 
 The two models are similar in terms of their goodness-of-fit values. Model A has one degree of freedom lower as it
 treats districtSize as one independent variable, while model B treats factorized size variable as 2.
+
+
+
+```{r}
+AIC(model_a, model_b)
+BIC(model_a, model_b)
+
+```
+
+Looking at the AIC and BIC, model A slightly outperforms model B, which is surprising given that variables districtSize and size in theory represent exactly the same information. 
+Considering the summary of both models, we can see that the linear model takes each factor of variable size in consideration with their own estimate (Intercept, size2, size3), while model A with the variable districtSize only uses one estimate which is multiplied with the districtSize.
+Therefore, we may conclude that model B slightly overfits the values because it has more variables to estimate on, and thats why we see a slight difference in performance between the models.
 
 
 ## 1.D)
@@ -144,7 +150,6 @@ treats districtSize as one independent variable, while model B treats factorized
 
 # save model summary in an object
 summary_b <- summary(model_b)
-
 
 
 ```
@@ -164,8 +169,6 @@ earn `r summary_b$coefficients[3,"Estimate"]` USD more than teachers in the refe
 
 The parameter estimate for variable "district 3" is `r summary_b$coefficients[4,"Estimate"]`. That means for the same level of experience, teachers in district size 3, 
 earn `r summary_b$coefficients[4,"Estimate"]` USD more than teachers in the reference district of size 1.
-
-
 
 
 ## 1.E)
@@ -213,6 +216,8 @@ plot(model_b)
 - based on scale-location plot we can confirm homoscedasticity of the residuals across all levels of the independent variables
 
 
+
+
 ## 1.G)
 
 ```{r}
@@ -227,7 +232,9 @@ example_data_b <- data.frame(experience = c(10), size = c("3"))
 
 According to model A the predicted salary will be `r predict(model_a, newdata = example_data_a)` and according to model B `r predict(model_b, newdata = example_data_b)`
 
+
 ---
+
 
 # Problem 2
 
@@ -350,3 +357,5 @@ pf(f_statistic, df1 = 2, df2 = 22, lower.tail = FALSE)
 ```
 
 The p-value is lower than 0.05 therefore the H0 (𝛽^1=𝛽^2=0) can be rejected. This means that the model with both predictors significantly explains the variation in the response variable y.
+
+
