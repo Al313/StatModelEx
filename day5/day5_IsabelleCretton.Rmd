@@ -171,3 +171,62 @@ Model B prediction:
 - 95% Confidence Interval: ($35,789.40, $37,349.17)
 
 Both models give similar predictions, with Model A predicting a slightly higher salary. The confidence intervals overlap substantially, indicating that the predictions are not significantly different between the two models.
+
+## Problem 2: Multiple linear regression
+
+```{r}
+# Given information
+beta_hat <- c(10, 12, 15)  # Estimated coefficients
+s_squared <- 2             # Estimated variance
+n <- 25                    # Number of cases
+X_transpose_X_inv <- matrix(c(1, 0.25, 0.25,
+                              0.25, 0.5, -0.25,
+                              0.25, -0.25, 2), nrow=3, byrow=TRUE)
+SST <- 120                 # Total sum of squares
+```
+
+### 2.A Calculate Standard Error of $\beta_2$
+```{r}
+SE_beta_2 <- sqrt(s_squared * X_transpose_X_inv[3,3])
+cat("SE(beta_2) =", SE_beta_2, "\n")
+```
+
+### 2.B Test $H_0: \beta_2 = 0$
+```{r}
+t_stat <- beta_hat[3] / SE_beta_2
+p_value <- 2 * (1 - pt(abs(t_stat), df = n - 3))
+cat("t-statistic =", t_stat, ", p-value =", p_value, "\n")
+```
+
+### 2.C Covariance and SE of $\beta_1 - \beta_2$
+```{r}
+cov_beta_1_beta_2 <- s_squared * X_transpose_X_inv[2,3]
+SE_diff <- sqrt(s_squared * (X_transpose_X_inv[2,2] + X_transpose_X_inv[3,3] - 2*X_transpose_X_inv[2,3]))
+cat("Cov(beta_1, beta_2) =", cov_beta_1_beta_2, ", SE(beta_1 - beta_2) =", SE_diff, "\n")
+```
+
+### 2.D Test $H_0: \beta_1 = \beta_2$
+```{r}
+t_stat_diff <- (beta_hat[2] - beta_hat[3]) / SE_diff
+p_value_diff <- 2 * (1 - pt(abs(t_stat_diff), df = n - 3))
+cat("t-statistic =", t_stat_diff, ", p-value =", p_value_diff, "\n")
+```
+
+### 2.E ANOVA Table and F-test
+```{r}
+SSR <- SST - (n - 3) * s_squared  # Sum of squares due to regression
+MSR <- SSR / 2  # Mean square regression
+MSE <- s_squared  # Mean square error
+F_stat <- MSR / MSE
+p_value_F <- 1 - pf(F_stat, df1 = 2, df2 = n - 3)
+R_squared <- SSR / SST
+
+cat("ANOVA Table:\n")
+cat("Source   | df | SS      | MS      | F      | p-value\n")
+cat("Regression| 2  |", round(SSR, 2), "|", round(MSR, 2), "|", round(F_stat, 2), "|", format.pval(p_value_F, digits = 4), "\n")
+cat("Error     |", n-3, "|", round((n-3)*s_squared, 2), "|", s_squared, "|\n")
+cat("Total     |", n-1, "|", SST, "|\n\n")
+
+cat("R-squared =", round(R_squared, 4), "\n")
+cat("Percentage of variation explained =", round(R_squared * 100, 2), "%\n")
+```
