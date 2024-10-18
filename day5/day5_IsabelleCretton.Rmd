@@ -1,0 +1,173 @@
+---
+title: "Exercise 5 Solutions"
+author: "Isabelle Cretton"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+--- 
+
+```{r global options}
+# Set global code chunk options
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r setup, include=FALSE}
+# Load necessary libraries
+#install.packages("car")
+library(car)
+#install.packages("lmtest")
+
+# Load the package
+library(lmtest)
+```
+
+## Problem 1: Multiple linear regression – teacher salaries
+
+### 1.A Read and Process Data
+```{r}
+# Read the data
+salary_data <- read.table("day5/data/salary.txt", header = TRUE, sep = ",", quote = "\"")
+
+# Create a factor variable for district size
+salary_data$size <- factor(salary_data$districtSize, 
+                           levels = 1:3, 
+                           labels = c("< 1000 students", "1000 - 2000 students", "> 2000 students"))
+
+head(salary_data)
+```
+
+
+### 1.B Numerical and Graphical Summaries
+```{r}
+# Numerical summaries
+summary(salary_data)
+
+# Average salary by district size
+aggregate(salary ~ size, data = salary_data, mean)
+
+# Graphical summaries
+par(mfrow = c(2, 2))
+plot(salary ~ experience, data = salary_data, main = "Salary vs Experience")
+boxplot(salary ~ size, data = salary_data, main = "Salary by District Size")
+hist(salary_data$salary, main = "Histogram of Salaries", xlab = "Salary")
+pairs(salary_data[, c("salary", "experience", "districtSize")], main = "Scatterplot Matrix")
+
+# Calculate average salary in CHF (assuming 1 USD = 0.89 CHF as of October 2023)
+mean_salary_chf <- mean(salary_data$salary) * 0.89
+print(paste("Average salary in CHF:", round(mean_salary_chf, 2)))
+```
+
+- There's a positive correlation between salary and experience.
+- Salary tends to increase with district size.
+- There's no clear relationship between experience and district size.
+
+
+### 1.C Fit and Compare Models
+```{r}
+# Fit models
+model_A <- lm(salary ~ experience + districtSize, data = salary_data)
+model_B <- lm(salary ~ experience + size, data = salary_data)
+
+# Compare models
+summary(model_A)
+summary(model_B)
+
+# Compare model fit
+anova(model_A, model_B)
+```
+
+### Comment 
+*Model A*: salary ~ experience + districtSize
+*Model B*: salary ~ experience + size (as a factor)
+Both models show similar performance:
+
+- *Model A*: Adjusted R-squared = 0.5748
+- *Model B*: Adjusted R-squared = 0.5741
+
+The ANOVA test comparing the two models shows no significant difference (p-value = 0.5145), indicating that using district size as a factor (Model B) doesn't significantly improve the model fit compared to using it as a continuous variable (Model A).
+
+### 1.D Model B Discussion
+Model B is statistically significant (F-statistic: 146.6, p-value < 2.2e-16).
+R-squared of 0.5741 suggests moderate explanatory power.
+All variables are highly significant (p-values < 2e-16):
+
+Experience: $584.15 increase per year
+Medium districts: $3,088 higher than small districts
+Large districts: $5,732.28 higher than small districts
+
+### 1.E Modified Model B
+```{r}
+# Fit the modified Model B
+model_B_modified <- lm(salary ~ I(experience - 13) + size, data = salary_data)
+
+# Compare summaries
+summary(model_B)
+summary(model_B_modified)
+
+# Compare coefficients
+cbind(coef(model_B), coef(model_B_modified))
+```
+
+The modified Model B shows:
+1. The intercept changed from 24995.49 to 32589.46.
+2. he coefficients for experience and district size remained the same:
+    - Experience: 584.15 (unchanged)
+    - Medium-sized districts: 3088.00 (unchanged)
+    - Large districts: 5732.28 (unchanged)
+
+### 1.F Check Regression Assumptions
+```{r}
+# Residual plots
+par(mfrow = c(2, 2))
+plot(model_B)
+
+# Additional diagnostic tests
+library(car)
+
+# Normality of residuals
+shapiro.test(residuals(model_B))
+qqPlot(model_B, main="QQ Plot")
+
+# Homoscedasticity
+ncvTest(model_B)
+spreadLevelPlot(model_B)
+
+# Multicollinearity
+vif(model_B)
+
+# Influential observations
+influencePlot(model_B, id.method="identify", main="Influence Plot", sub="Circle size is proportional to Cook's Distance")
+
+# Durbin-Watson test for autocorrelation
+dwtest(model_B)
+```
+- Linearity: Reasonably met (random scatter in Residuals vs Fitted plot)
+- Homoscedasticity: Slight heteroscedasticity observed
+- Normality: Approximately normal with some tail deviations
+- Influential observations: A few potential influential points (e.g., 511, 317, 173)
+Assumptions are reasonably met with some potential issues.
+
+### 1.G Salary Prediction
+```{r}
+# Create a new data point
+new_teacher <- data.frame(experience = 10, 
+                          districtSize = 3, 
+                          size = "> 2000 students")
+
+# Predict using Model A
+predict(model_A, newdata = new_teacher, interval = "confidence")
+
+# Predict using Model B
+predict(model_B, newdata = new_teacher, interval = "confidence")
+```
+For a teacher with 10 years of experience in a large district:
+
+Model A prediction:
+- Point estimate: $36,704.42
+- 95% Confidence Interval: ($36,040.00, $37,368.84)
+
+Model B prediction:
+- Point estimate: $36,569.29
+- 95% Confidence Interval: ($35,789.40, $37,349.17)
+
+Both models give similar predictions, with Model A predicting a slightly higher salary. The confidence intervals overlap substantially, indicating that the predictions are not significantly different between the two models.
