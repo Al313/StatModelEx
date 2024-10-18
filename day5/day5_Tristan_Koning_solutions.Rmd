@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 ```{r}
 library(ggplot2)
 library(GGally)
@@ -15,7 +20,7 @@ library(randomForest)
 ## (a)
 ```{r}
 # Load data
-salary <-  read.csv("day5/data/salary.txt", sep = ",", header = TRUE)
+salary <-  read.csv("data/salary.txt", sep = ",", header = TRUE)
 
 # Create a factor variable for district size
 salary <- within(salary, {
@@ -65,7 +70,7 @@ summary(model_B)
 ```
 
 Looking at the p-values we can see that all variables are significant (<2e-16). Therefore, each variable explains part of the variance and should not be dropped.
-We can interpret the Estimate as follows: The intercept is the base salary for every teacher. With each year of experience, we can add `r model_B$coefficients[2,1]`$ to the salary, and depending on the districtSize, we can do the same.
+We can interpret the Estimate as follows: The intercept is the base salary for every teacher. With each year of experience, we can add its coefficient to the salary, and depending on the districtSize, we can do the same.
 
 ## (e)
 ```{r}
