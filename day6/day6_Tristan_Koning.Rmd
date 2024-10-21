@@ -1,0 +1,84 @@
+---
+title:  
+    "Week 6 exercise solutions"
+date: 
+    "Oct. 14th, 2024"
+author:  
+    "Ali Movasati, Isabelle Cretton, Tristan Koning"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+---
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+```{r libraries}
+
+
+# load required libraries
+library(skimr)
+library(ggplot2)
+library(lme4)
+```
+
+# Exercise 1
+
+## (a)
+
+```{r}
+# Load data
+hearing <-  read.table(file = "day6/data/hearing.txt", sep = "\t", header = TRUE)
+hearing <- within(hearing, {
+  ListID <- factor(ListID, levels = c("List1", "List2", "List3", "List4"))
+})
+skim(hearing)
+
+# Graphical summeries
+pairs(hearing)
+
+# Boxplot of scores by ListID
+bxp1 <- ggplot(hearing, aes(x = ListID, y = Hearing, color = ListID)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Scores by ListID", x = "ListID", y = "Score")
+
+# Scatterplot of subjectids on hearing scores
+scat1 <- ggplot(hearing, aes(x = SubjectID, y = Hearing, color = ListID)) +
+  geom_point() +
+  labs(title = "Scatterplot of Scores by SubjectID", x = "SubjectID", y = "Score")
+
+print(bxp1)
+print(scat1)
+```
+
+## (b)
+```{r}
+model_A <- lm(Hearing ~ ListID, data = hearing)
+
+summary(model_A)
+anova(model_A)
+```
+
+We can explain 11% of the variance in hearing scores by the list ID variable (Adjusted R squared). 
+Looking at the anova output, ListID has a significant p-value meaning that there is a significant difference in means between the lists.
+
+## (c)
+```{r}
+# Fit a linear mixed model
+model_B <- lmer(Hearing ~ (1 | SubjectID) + ListID, data = hearing)
+summary(model_B)
+
+plot(model_B)
+confint(model_B, method = "boot", nsim = 100, oldNames = FALSE)
+```
+
+we cannot entirely conclude that the hearing scores differ for different lists, as there does exist an overlap in the confidence intervals of the estimates. 
+
+## (d)
+```{r}
+# TODO
+```
