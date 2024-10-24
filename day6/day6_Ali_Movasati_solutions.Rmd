@@ -1,0 +1,209 @@
+---
+title:  
+    "Day6 exercise solutions"
+date: 
+    "Oct. 21st, 2024"
+author:  
+    "Ali Movasati"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+---
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+
+```{r libraries}
+
+
+# load required libraries
+library(skimr)
+library(ggplot2)
+library(ggpubr)
+library(magrittr)
+library(tidyr)
+library(dplyr)
+library(tibble)
+library(lme4)
+library(lattice)
+
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Problem 1
+
+```{r}
+
+# read in the data
+
+hearing <- read.table(file = "/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/StatModelEx/day6/data/hearing.txt", header = T, sep = "\t")
+
+```
+
+## 1.A)
+
+```{r}
+
+# print descriptive 
+skim(hearing)
+
+table(hearing$ListID)
+
+# prepare data
+
+hearing %<>% mutate(ListID = as.factor(ListID), SubjectID = as.factor(SubjectID))
+
+# plot a box-plot for visualization
+
+hearing %>% ggplot(aes(x = ListID, y = Hearing, color = ListID)) +
+        geom_boxplot() +
+        geom_jitter(width = 0.1, aes(color = factor(ListID)), size = 2) +
+        theme_minimal()
+
+
+```
+
+## 1.B)
+
+```{r}
+
+lm_simple <- lm(Hearing ~ 1 + ListID, data = hearing)
+
+sum_model_simple <- summary(lm_simple)
+
+print(sum_model_simple)
+
+```
+
+### << comments >>
+
+Only `r round(sum_model_simple$adj.r.squared*100, digits = 2)`% of variability in hearing measures are explained by different lists
+
+We have enough evidence to state that the mean hearing score for List 3 and 4 are different than list 1, while for list 2 we cannot state that!
+
+## 1.C)
+
+```{r}
+
+# fit the mixed model
+lm_mixed <- lmer(Hearing ~ 1 + ListID + (1|SubjectID), data = hearing)
+
+sum_model_mixed <- summary(lm_mixed)
+
+print(sum_model_mixed)
+
+# fit the model without ListID (null model)
+lm_mixed_null <- lmer(Hearing ~ (1 | SubjectID), data = hearing)
+
+sum_model_mixed_null <- summary(lm_mixed_null)
+
+# Likelihood ratio test
+anova(lm_mixed_null, lm_mixed)
+
+
+```
+
+## 1.D)
+
+### << comments >>
+
+Both models indicate that there are significant differences between the mean hearing score of word lists, therefore
+background noise changes the difficulty level of these test!
+
+# Problem 2
+
+
+```{r}
+
+# read in the data
+
+termites <- read.table(file = "/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/StatModelEx/day6/data/termites.txt", header = T, sep = " ")
+
+```
+
+
+## 2.A)
+
+```{r}
+
+# explore the data
+skim(termites)
+
+
+```
+
+## 2.B)
+
+```{r}
+
+# get the data into long format using tidyr::pivot_longer
+
+termites %<>% pivot_longer(cols = starts_with("day"), names_to = "day", values_to = "n.termites") %>%
+        mutate(day = sapply(str_split(day, pattern = "day"), "[", 2))
+
+
+head(termites)
+
+
+
+# xyplot to show termite survival over time by dose
+
+xyplot(n.termites ~ day | factor(dose), 
+       data = termites_long, 
+       groups = factor(dish),
+       type = c("o"), # Points and regression lines
+       auto.key = TRUE,    # Automatically create a legend
+       main = "Survival of Termites Over Days by Dose",
+       xlab = "Day",
+       ylab = "Number of Surviving Termites",
+       layout = c(1, 2))
+
+# Boxplot of n.termites grouped by dose
+bwplot(factor(dose) ~ n.termites, 
+       data = termites_long,
+       main = "Boxplot of Termite Survival by Dose",
+       xlab = "Number of Surviving Termites",
+       ylab = "Dose (mg)",
+       panel = function(x, y) {
+           panel.bwplot(x, y)  # Default box plot
+           panel.stripplot(x, y, jitter.data = TRUE, col = "red", pch = 16)  # Add points with jitter
+       })
+
+
+
+```
+
+## 2.C)
+
+```{r}
+
+```
+
+## 2.D)
+
+```{r}
+
+```
+
+
+## 2.E)
+
+```{r}
+
+```
+
+## 2.F)
+
+```{r}
+
+```
