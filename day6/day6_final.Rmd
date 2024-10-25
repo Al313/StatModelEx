@@ -1,14 +1,15 @@
 ---
 title:  
-    "Week 6 exercise solutions"
+    "Day6 exercise solutions"
 date: 
-    "Oct. 14th, 2024"
+    "Oct. 21st, 2024"
 author:  
     "Ali Movasati, Isabelle Cretton, Tristan Koning"  
 output:  
     pdf_document:
         latex_engine: xelatex
 ---
+
 
 ```{r global options}
 
@@ -17,22 +18,33 @@ knitr::opts_chunk$set(warning = FALSE)
 
 ```
 
+
 ```{r libraries}
 
 
 # load required libraries
 library(skimr)
 library(ggplot2)
-library(lme4)
+library(ggpubr)
+library(magrittr)
+library(tidyr)
 library(dplyr)
-library(reshape2)
+library(tibble)
+library(lme4)
 library(lattice)
+library(reshape2)
+
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
 ```
 
-# Exercise 1
 
-## (a)
+# Problem 1
 
+## 1.A)
 ```{r}
 # Load data
 hearing <-  read.table(file = "data/hearing.txt", sep = "\t", header = TRUE)
@@ -42,49 +54,59 @@ hearing <- within(hearing, {
 skim(hearing)
 
 # Graphical summeries
-pairs(hearing)
-
 # Boxplot of scores by ListID
-bxp1 <- ggplot(hearing, aes(x = ListID, y = Hearing, color = ListID)) +
-  geom_boxplot() +
-  labs(title = "Boxplot of Scores by ListID", x = "ListID", y = "Score")
+hearing %>% ggplot(aes(x = ListID, y = Hearing, color = ListID)) +
+        geom_boxplot() +
+        geom_jitter(width = 0.1, aes(color = factor(ListID)), size = 2) +
+        theme_minimal()
 
 # Scatterplot of subjectids on hearing scores
-scat1 <- ggplot(hearing, aes(x = SubjectID, y = Hearing, color = ListID)) +
+ggplot(hearing, aes(x = SubjectID, y = Hearing, color = ListID)) +
   geom_point() +
   labs(title = "Scatterplot of Scores by SubjectID", x = "SubjectID", y = "Score")
 
-print(bxp1)
-print(scat1)
 ```
 
-## (b)
+## 1.B)
+
 ```{r}
 model_A <- lm(Hearing ~ ListID, data = hearing)
-
-summary(model_A)
-anova(model_A)
+sum_model_A <- summary(model_A)
 ```
 
-We can explain 11% of the variance in hearing scores by the list ID variable (Adjusted R squared). 
-Looking at the anova output, ListID has a significant p-value meaning that there is a significant difference in means between the lists.
+### << comments >>
 
-## (c)
+Only `r round(sum_model_A$adj.r.squared*100, digits = 2)`% of variability in hearing measures are explained by different lists
+
+We have enough evidence to state that the mean hearing score for List 3 and 4 are different than list 1, while for list 2 we cannot state that!
+
+## 1.C)
+
 ```{r}
-# Fit a linear mixed model
-model_B <- lmer(Hearing ~ (1 | SubjectID) + ListID, data = hearing)
-summary(model_B)
 
-plot(model_B)
-confint(model_B, method = "boot", nsim = 100, oldNames = FALSE)
+# fit the mixed model
+lm_mixed <- lmer(Hearing ~ 1 + ListID + (1|SubjectID), data = hearing)
+
+sum_model_mixed <- summary(lm_mixed)
+
+print(sum_model_mixed)
+
+# fit the model without ListID (null model)
+lm_mixed_null <- lmer(Hearing ~ (1 | SubjectID), data = hearing)
+
+sum_model_mixed_null <- summary(lm_mixed_null)
+
+# Likelihood ratio test
+anova(lm_mixed_null, lm_mixed)
 ```
 
-we cannot entirely conclude that the hearing scores differ for different lists, as there does exist an overlap in the confidence intervals of the estimates. 
+### << comments >>
 
-## (d)
-```{r}
-# TODO
-```
+The more complex model with ListID as a fixed effect is significantly more accurate at representing the data than the simpler model. 
+
+## 1.D)
+
+Both models from 1.B and 1.C have the same estimates.
 
 # Exercise 2
 
@@ -138,6 +160,8 @@ ggplot(termites, aes(x = as.numeric(gsub("day", "", day)), y = measurement, colo
   labs(title = "Model A: Predicted Values by Day and Dish", x = "Day", y = "Measurement")
 ```
 
+### << comments >>
+
 It is problematic to use dish as a dependent variable, as repeated measurements are taken on the same dish. This violates the assumption of independence of observations. 
 
 ## (d)
@@ -157,6 +181,8 @@ ggplot(termites, aes(x = as.numeric(gsub("day", "", day)), y = measurement, colo
   labs(title = "Model B: Predicted Values by Day and Dish", x = "Day", y = "Measurement")
 ```
 
+### << comments >>
+
 The linear mixed model is more appropriate for this data as it accounts for the repeated measurements taken on the same dish, this can also be seen visually in the plots, where each prediction in model_B seem to be closer to the actual measurements compared to model_A. Dose now seems highly correlated with the measurements whereas in model_A it was not significant.
 
 ## (e)
@@ -175,6 +201,8 @@ ggplot(termites, aes(x = as.numeric(gsub("day", "", day)), y = measurement, colo
   geom_line(aes(y = predicted_C)) +
   labs(title = "Model C: Predicted Values by Day and Dish", x = "Day", y = "Measurement")
 ```
+
+### << comments >>
 
 Again, this model seems to be more accurate than the previous models. 
 
@@ -196,5 +224,7 @@ boostrap_ci <- function(data, formula, parameter, N = 1000, conf = 0.90) {
 ci <- boostrap_ci(termites, measurement ~ dose + day + (1 | dish) + day, "dose")
 ci
 ```
+
+### << comments >>
 
 The estimate of model_B where we have only a random intercept for dish falls within the 90% confidence interval, therefore we can conclude that the estimate is significant.
