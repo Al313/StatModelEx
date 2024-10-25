@@ -148,18 +148,17 @@ skim(termites)
 
 # get the data into long format using tidyr::pivot_longer
 
-termites %<>% pivot_longer(cols = starts_with("day"), names_to = "day", values_to = "n.termites") %>%
-        mutate(day = sapply(str_split(day, pattern = "day"), "[", 2))
-
+termites %<>% pivot_longer(cols = starts_with("day"), names_to = "day", values_to = "survival") %>%
+        mutate(day = as.integer(sapply(str_split(day, pattern = "day"), "[", 2)),
+        dish = as.factor(dish),
+        )
 
 head(termites)
 
-
-
 # xyplot to show termite survival over time by dose
 
-xyplot(n.termites ~ day | factor(dose), 
-       data = termites_long, 
+xyplot(survival ~ day | factor(dose), 
+       data = termites, 
        groups = factor(dish),
        type = c("o"), # Points and regression lines
        auto.key = TRUE,    # Automatically create a legend
@@ -168,9 +167,9 @@ xyplot(n.termites ~ day | factor(dose),
        ylab = "Number of Surviving Termites",
        layout = c(1, 2))
 
-# Boxplot of n.termites grouped by dose
-bwplot(factor(dose) ~ n.termites, 
-       data = termites_long,
+# Boxplot of survival grouped by dose
+bwplot(factor(dose) ~ survival, 
+       data = termites,
        main = "Boxplot of Termite Survival by Dose",
        xlab = "Number of Surviving Termites",
        ylab = "Dose (mg)",
@@ -187,11 +186,70 @@ bwplot(factor(dose) ~ n.termites,
 
 ```{r}
 
+# make the linear model
+lm_model <- lm(survival ~ dish + dose + day, data = termites)
+
+summary(lm_model)
+
+
+# plot the predicted values
+
+## Obtain predictions
+termites$predicted <- ""
+termites$predicted[is.na(termites$survival)] <- NA
+
+termites$predicted[!is.na(termites$survival)] <- as.numeric(predict(lm_model))
+
+termites %<>% mutate(predicted = as.numeric(predicted))
+
+
+xyplot(predicted ~ day | factor(dose), 
+       data = termites, 
+       groups = factor(dish),
+       type = c("o"), # Points and regression lines
+       auto.key = TRUE,    # Automatically create a legend
+       main = "Survival of Termites Over Days by Dose",
+       xlab = "Day",
+       ylab = "Number of Surviving Termites",
+       layout = c(1, 2))
+
+
 ```
+
+### << comments >>
+
+Too many parameters for the variable dish!
 
 ## 2.D)
 
 ```{r}
+
+# make the linear model
+lm_model_mixed1 <- lmer(survival ~ dose + day + (1|dish), data = termites)
+
+summary(lm_model_mixed1)
+
+
+# plot the predicted values
+
+## Obtain predictions
+termites$predicted_mixed1 <- ""
+termites$predicted_mixed1[is.na(termites$survival)] <- NA
+
+termites$predicted_mixed1[!is.na(termites$survival)] <- as.numeric(predict(lm_model_mixed1))
+
+termites %<>% mutate(predicted_mixed1 = as.numeric(predicted_mixed1))
+
+
+xyplot(predicted_mixed1 ~ day | factor(dose), 
+       data = termites, 
+       groups = factor(dish),
+       type = c("o"), # Points and regression lines
+       auto.key = TRUE,    # Automatically create a legend
+       main = "Survival of Termites Over Days by Dose",
+       xlab = "Day",
+       ylab = "Number of Surviving Termites",
+       layout = c(1, 2))
 
 ```
 
@@ -200,10 +258,57 @@ bwplot(factor(dose) ~ n.termites,
 
 ```{r}
 
+# make the linear model
+lm_model_mixed2 <- lmer(survival ~ dose + day + (day|dish), data = termites)
+
+summary(lm_model_mixed2)
+
+
+# plot the predicted values
+
+## Obtain predictions
+termites$predicted_mixed2 <- ""
+termites$predicted_mixed2[is.na(termites$survival)] <- NA
+
+termites$predicted_mixed2[!is.na(termites$survival)] <- as.numeric(predict(lm_model_mixed2))
+
+termites %<>% mutate(predicted_mixed2 = as.numeric(predicted_mixed2))
+
+
+xyplot(predicted_mixed2 ~ day | factor(dose), 
+       data = termites, 
+       groups = factor(dish),
+       type = c("o"), # Points and regression lines
+       auto.key = TRUE,    # Automatically create a legend
+       main = "Survival of Termites Over Days by Dose",
+       xlab = "Day",
+       ylab = "Number of Surviving Termites",
+       layout = c(1, 2))
+
+
 ```
 
 ## 2.F)
 
 ```{r}
 
+boostrap_ci <- function(data, formula, parameter, N = 1000, conf = 0.90) { 
+    estimates <- numeric(N)
+    for (i in 1:N) {
+        resample <- data[sample(nrow(data), replace = TRUE), ] 
+        model <- lmer(formula, data = resample)
+        estimates[i] <- fixef(model)[[parameter]]
+    }
+    return(quantile(estimates, c((1 - conf) / 2, 1 - (1 - conf) / 2))) 
+}
+
+
+
+ci <- boostrap_ci(termites, survival ~ dose + day + (1 | dish) + day, "dose") 
+ci
+
 ```
+
+### << comments >>
+
+The 90% confidence interval excludes 0, therefore we can say that dose significantly impact survival!
