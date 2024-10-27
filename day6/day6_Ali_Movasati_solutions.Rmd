@@ -32,6 +32,7 @@ library(dplyr)
 library(tibble)
 library(lme4)
 library(lattice)
+library(stringr)
 
 
 # define functions
@@ -186,6 +187,8 @@ bwplot(factor(dose) ~ survival,
 
 ```{r}
 
+str(termites)
+termites$dish <- as.integer(termites$dish)
 # make the linear model
 lm_model <- lm(survival ~ dish + dose + day, data = termites)
 
@@ -292,19 +295,27 @@ xyplot(predicted_mixed2 ~ day | factor(dose),
 
 ```{r}
 
-boostrap_ci <- function(data, formula, parameter, N = 1000, conf = 0.90) { 
+boostrap_ci <- function(data, model_type = "mixed",formula, parameter, N = 1000, conf = 0.90) { 
     estimates <- numeric(N)
     for (i in 1:N) {
         resample <- data[sample(nrow(data), replace = TRUE), ] 
-        model <- lmer(formula, data = resample)
-        estimates[i] <- fixef(model)[[parameter]]
+        if (model_type == "mixed"){
+            model <- lmer(formula, data = resample)
+            estimates[i] <- fixef(model)[[parameter]]
+        } else {
+            model <- lm(formula, data = resample)
+            estimates[i] <- coef(model)[[parameter]]
+        }
+        
+        
     }
     return(quantile(estimates, c((1 - conf) / 2, 1 - (1 - conf) / 2))) 
 }
 
 
+ci <- boostrap_ci(termites, "mixed", survival ~ dose + day + (1 | dish) + day, "dose") 
+#ci <- boostrap_ci(termites, "simple", survival ~ dish + dose + day, "dose") 
 
-ci <- boostrap_ci(termites, survival ~ dose + day + (1 | dish) + day, "dose") 
 ci
 
 ```

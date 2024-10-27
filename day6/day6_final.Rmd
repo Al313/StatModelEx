@@ -155,6 +155,7 @@ termites$predicted_A <- predict(model_A)
 
 # Plot model
 ggplot(termites, aes(x = as.numeric(gsub("day", "", day)), y = measurement, color = as.factor(dish))) +
+  facet_wrap(~dose) +
   geom_point() +
   geom_line(aes(y = predicted_A)) +
   labs(title = "Model A: Predicted Values by Day and Dish", x = "Day", y = "Measurement")
@@ -176,6 +177,7 @@ termites$predicted_B <- predict(model_B)
 
 # Plot model
 ggplot(termites, aes(x = as.numeric(gsub("day", "", day)), y = measurement, color = as.factor(dish))) +
+  facet_wrap(~dose) +
   geom_point() +
   geom_line(aes(y = predicted_B)) +
   labs(title = "Model B: Predicted Values by Day and Dish", x = "Day", y = "Measurement")
@@ -197,6 +199,7 @@ termites$predicted_C <- predict(model_C)
 
 # Plot model
 ggplot(termites, aes(x = as.numeric(gsub("day", "", day)), y = measurement, color = as.factor(dish))) +
+  facet_wrap(~dose) +
   geom_point() +
   geom_line(aes(y = predicted_C)) +
   labs(title = "Model C: Predicted Values by Day and Dish", x = "Day", y = "Measurement")
@@ -227,4 +230,4 @@ ci
 
 ### << comments >>
 
-The estimate of model_B where we have only a random intercept for dish falls within the 90% confidence interval, therefore we can conclude that the estimate is significant.
+The 90% confidence interval excludes 0, therefore we can say that dose significantly impact survival!
