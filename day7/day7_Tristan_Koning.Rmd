@@ -1,0 +1,139 @@
+---
+title:  
+    "Week 6 exercise solutions"
+date: 
+    "Oct. 14th, 2024"
+author:  
+    "Ali Movasati, Isabelle Cretton, Tristan Koning"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+---
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+```{r libraries}
+# load required libraries
+library(skimr)
+library(ggplot2)
+library(np)
+```
+
+# Exercise 1
+
+## (a)
+```{r}
+# Load and explore data
+medflies <- read.table(file = "day7/data/medflies.txt", sep = "\t", header = TRUE)
+medflies$mort.rate <- as.numeric(medflies$mort.rate)
+skim(medflies)
+str(medflies)
+
+# Graphical EDA
+ggplot(medflies, aes(x = day, y = mort.rate)) +
+  geom_line() +
+  labs(title = "Mortality Rate Over Time", x = "Day", y = "Mortality Rate")
+
+ggplot(medflies, aes(x = day, y = living)) +
+  geom_line() +
+  labs(title = "Living Flies Over Time", x = "Day", y = "Living Flies")
+```
+
+## (b)
+```{r}
+for (i in 1:(nrow(medflies) - 2)) {
+  medflies$mort.rate2[i] <- (medflies$living[i] - medflies$living[i + 1]) / medflies$living[i]
+}
+
+ggplot(medflies, aes(x = day, y = mort.rate2)) +
+  geom_line() +
+  labs(title = "Mortality Rate Over Time (recomputed)", x = "Day", y = "Mortality Rate")
+```
+
+mort.rate and mort.rate2 are very similar, but not identical. mort.rate2 is slightly higher than mort.rate. This is likely due to the fact that the original mort.rate was rounding to 4 decimal places, while mort.rate2 is rounding on a higher precision.
+
+## (c)
+
+```{r}
+# Remove NA values
+medflies <- medflies[complete.cases(medflies), ]
+medflies$mort.rate2[medflies$mort.rate2 == 0] <- 1e-10
+
+# Transform the mortality rate
+medflies$log_mort_rate2 <- log(medflies$mort.rate2)
+
+# Fit a linear regression model
+model_A <- lm(log_mort_rate2 ~ day, data = medflies)
+
+summary(model_A)
+
+ggplot(medflies, aes(x = day, y = log_mort_rate2)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Log(Mortality Rate) Over Time", x = "Day", y = "Log(Mortality Rate)")
+
+par(mfrow = c(2, 2))
+plot(model_A)
+```
+
+Looking at the plot of the model, we can observe a decrease in the mortality rate over time. However, we can spot that the first few days indeed to have a linear increase in the log(Mortality Rate), therefore there does exist some exponential growth in the beginning. This stops after roughly 10-15 days.
+
+## (d)
+
+```{r}
+# Different kernel
+model_B <- npreg(mort.rate2 ~ day, data = medflies, ckertype = "gaussian")
+model_C <- npreg(mort.rate2 ~ day, data = medflies, ckertype = "uniform")
+model_D <- npreg(mort.rate2 ~ day, data = medflies, ckertype = "triangular")
+
+# Different bandwidths
+model_E <- npreg(mort.rate2 ~ day, data = medflies, bwmethod = "cv.aic")
+model_F <- npreg(mort.rate2 ~ day, data = medflies, bwmethod = "cv.ls")
+
+# Create a data frame for plotting the fitted values
+fitted_values <- data.frame(
+  day = medflies$day,
+  mort.rate2 = medflies$mort.rate2,
+  fit_gaussian = fitted(model_B),
+  fit_uniform = fitted(model_C),
+  fit_triangular = fitted(model_D),
+  fit_cv_aic = fitted(model_E),
+  fit_cv_ls = fitted(model_F)
+)
+
+# Plot the data and the resulting fits
+ggplot(medflies, aes(x = day, y = mort.rate2)) +
+  geom_point() +
+  geom_line(data = fitted_values, aes(x = day, y = fit_gaussian, color = "Gaussian")) +
+  geom_line(data = fitted_values, aes(x = day, y = fit_uniform, color = "Uniform")) +
+  geom_line(data = fitted_values, aes(x = day, y = fit_triangular, color = "Triangular")) +
+  geom_line(data = fitted_values, aes(x = day, y = fit_cv_aic, color = "CV AIC")) +
+  geom_line(data = fitted_values, aes(x = day, y = fit_cv_ls, color = "CV LS")) +
+  scale_color_manual(name = "Model", values = c("Gaussian" = "blue", "Uniform" = "red", "Triangular" = "green", "CV AIC" = "purple", "CV LS" = "orange")) +
+  labs(title = "Mortality Rate Over Time", x = "Day", y = "Mortality Rate") +
+  theme_minimal()
+```
+
+## (e) ii
+
+```{r}
+# Fit a model with different spans
+model_B <- loess(mort.rate ~ day, data = medflies, span = 0.3)
+model_C <- loess(mort.rate ~ day, data = medflies, span = 0.5)
+model_D <- loess(mort.rate ~ day, data = medflies, span = 0.7)
+model_E <- loess(mort.rate ~ day, data = medflies, span = 0.1)
+
+# Plot the models
+ggplot(medflies, aes(x = day, y = mort.rate)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE, color = "blue", span = 0.3) +
+  geom_smooth(method = "loess", se = FALSE, color = "red", span = 0.5) +
+  geom_smooth(method = "loess", se = FALSE, color = "green", span = 0.7) +
+  geom_smooth(method = "loess", se = FALSE, color = "purple", span = 0.1) +
+  labs(title = "Mortality Rate Over Time", x = "Day", y = "Mortality Rate")
+```
