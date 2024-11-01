@@ -31,7 +31,7 @@ library(sm)
 ## (a)
 ```{r}
 # Load and explore data
-medflies <- read.table(file = "day7/data/medflies.txt", sep = "\t", header = TRUE)
+medflies <- read.table(file = "data/medflies.txt", sep = "\t", header = TRUE)
 medflies$mort.rate <- as.numeric(medflies$mort.rate)
 skim(medflies)
 str(medflies)
@@ -174,11 +174,17 @@ opt_bw <- hcv(medflies$day, medflies$mort.rate2, kernel = "normal")
 
 model_opt <- sm.regression(x = medflies$day, y = medflies$mort.rate2, h = opt_bw)
 
+fitted_values_opt <- data.frame(
+  day = model_opt$eval.points,
+  mort.rate2 = model_opt$estimate
+)
+
+# Plot the data and the resulting fit
 ggplot(medflies, aes(x = day, y = mort.rate2)) +
   geom_point() +
-  geom_line(data = data.frame(day = medflies$day, mort.rate2 = model_opt$estimate), color = "blue") +
-  labs(title = "Optimal Bandwidth Model", x = "Day", y = "Mortality Rate")
-```
+  geom_line(data = fitted_values_opt, aes(x = day, y = mort.rate2), color = "blue") +
+  labs(title = "Optimal Bandwidth Model", x = "Day", y = "Mortality Rate") +
+  theme_minimal()
 
 ## (g)
 
