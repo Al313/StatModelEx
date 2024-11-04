@@ -8,6 +8,8 @@ author:
 output:  
     pdf_document:
         latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
 ---
 
 
@@ -184,4 +186,7 @@ print(paste0("LD50 or the dose at which there is 50% chance of survival is ", ld
 
 
 # Problem 2
+
+\includepdf[pages=-]{/Users/alimos313/Downloads/day8_problem2.pdf}
+
 
