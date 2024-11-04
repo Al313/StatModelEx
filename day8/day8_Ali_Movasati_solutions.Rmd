@@ -1,0 +1,187 @@
+---
+title:  
+    "Day8 exercise solutions"
+date: 
+    "Oct. 4th, 2024"
+author:  
+    "Ali Movasati"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+---
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+
+```{r libraries}
+
+
+# load required libraries
+library("skimr")
+library("dplyr")
+library("magrittr")
+library("ggplot2")
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Problem 1
+
+```{r load the  data}
+
+data(bliss, package = "faraway")
+
+```
+
+## 1.A)
+
+```{r}
+
+skim(bliss)
+head(bliss)
+
+```
+
+
+
+## 1.B)
+
+```{r}
+
+bliss %<>% mutate(total = alive + dead)
+
+
+logit_model <- glm(cbind(alive,dead)~conc, family = binomial(link=logit), data = bliss)
+
+summary(logit_model)
+
+```
+
+
+## 1.C)
+
+```{r}
+
+
+logit_model_out <- predict(logit_model, newdata=data.frame(conc=seq(-1,to=5,length.out=100)), type="response")
+
+plot(alive/total~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
+
+points(bliss$conc, logit_model$fitted.values, pch=0, col="red", cex=2)
+
+
+
+```
+
+
+## 1.D)
+
+```{r}
+
+plot(alive/total~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
+
+points(bliss$conc, logit_model$fitted.values, pch=0, col="red", cex=2)
+lines(seq(-1,to=5,length.out=100),logit_model_out, col = "red")
+
+```
+
+## 1.E)
+
+
+
+```{r}
+
+logit_model_out2 <- predict(logit_model, newdata=data.frame(conc=seq(-1,to=5,length.out=100)), type="link", se = TRUE)
+
+
+new_data <- data.frame(conc = seq(-1,to=5,length.out=100))
+
+new_data$fit <- logit_model_out2$fit
+new_data$lower <- logit_model_out2$fit - qnorm(0.975) * logit_model_out2$se.fit
+new_data$upper <- logit_model_out2$fit + qnorm(0.975) * logit_model_out2$se.fit
+
+
+new_data$fit_prob <- 1 / (1 + exp(-new_data$fit))
+new_data$upper_prob <- 1 / (1 + exp(-new_data$upper))
+new_data$lower_prob <- 1 / (1 + exp(-new_data$lower))
+
+
+
+# plot
+
+plot(alive/total~conc, xlim = c(-1,5), ylim = c(0,1), cex=2, data=bliss)
+
+points(bliss$conc, logit_model$fitted.values, pch=0, col="red", cex=2)
+
+lines(new_data$conc,new_data$fit_prob, col = "red")
+lines(new_data$conc,new_data$lower_prob, col = "blue", lty = "dashed")
+lines(new_data$conc,new_data$upper_prob, col = "blue", lty = "dashed")
+
+```
+
+
+
+## 1.F)
+
+
+```{r}
+
+
+
+probit_model <- glm(cbind(alive,dead)~conc, family = binomial(link=probit), data = bliss)
+
+summary(probit_model)
+
+probit_model_out <- predict(probit_model, newdata=data.frame(conc=seq(-1,to=5,length.out=100)), type="response")
+
+plot(alive/total~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
+
+points(bliss$conc, probit_model$fitted.values, pch=0, col="blue", cex=2)
+
+lines(seq(-1,to=5,length.out=100),probit_model_out, col = "blue")
+
+```
+
+
+## 1.G)
+
+
+```{r}
+
+
+plot(alive/total~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
+lines(seq(-1,to=5,length.out=100),logit_model_out, col = "red")
+lines(seq(-1,to=5,length.out=100),probit_model_out, col = "blue")
+
+
+```
+
+### << comments >>
+
+The two fits agree over the range of the S-curve, and deviate at the two ends of the fit.
+
+## 1.H)
+
+
+```{r}
+
+
+logit_model_out <- predict(logit_model, newdata=data.frame(conc=seq(-1,to=5,length.out=100000)), type="response")
+ld50 <- round(seq(-1,to=5,length.out=100000)[which.min(abs(logit_model_out-0.5))])
+
+print(paste0("LD50 or the dose at which there is 50% chance of survival is ", ld50))
+
+```
+
+
+# Problem 2
+
