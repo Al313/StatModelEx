@@ -1,0 +1,180 @@
+---
+title:  
+    "Day8 exercise solutions"
+date: 
+    "Oct. 31st, 2024"
+author:  
+    "Ali Movasati, Isabelle Cretton, Tristan Koning"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+---
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+
+```{r libraries}
+# load required libraries
+library(faraway)
+library(skimr)
+library(ggplot2)
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+```
+
+# Problem 1
+
+## (a)
+```{r}
+data(bliss)
+head(bliss)
+
+# Plot ratio of dead and total insects
+ggplot(bliss, aes(x = conc, y = dead / 30)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Ratio of Dead and Total Insects", x = "Dose", y = "Dead / Total")
+```
+
+## (b)
+
+```{r}
+# Fit logistic model, predicting dead and alive insects (cbind)
+model_A <- glm(cbind(dead, 30 - dead) ~ conc, data = bliss, family = binomial)
+summary(model_A)
+
+# Plot the fitted model
+ggplot(bliss, aes(x = conc, y = dead / 30)) +
+  geom_point() +
+  geom_smooth(method = "glm", method.args = list(family = binomial), se = FALSE) +
+  labs(title = "Ratio of Dead and Total Insects", x = "Dose", y = "Dead / Total")
+```
+
+We get a significant results for both the Intercept and the concentration variable. The higher the concentration is, the higher the ratio of dead insects.
+
+## (c)
+
+```{r}
+plogis(coef(model_A)[1] + coef(model_A)[2] * bliss$conc)
+fitted(model_A)
+```
+
+## (d)
+
+```{r}
+newdata <- data.frame(conc = c(bliss$conc))
+predictions <- predict.glm(model_A, newdata = newdata, type = "response")
+
+# Plot ratio of dead and total insects and add the fitted values
+ggplot(bliss, aes(x = conc, y = dead / 30)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, aes(color = "Original Ratio")) +
+  geom_line(aes(y = predictions, color = "Fitted Line")) +
+  scale_color_manual(name = "Legend", values = c("Original Ratio" = "blue", "Fitted Line" = "black")) +
+  labs(title = "Ratio of Dead and Total Insects", x = "Dose", y = "Dead / Total")
+```
+
+## (e)
+
+```{r}
+lin_predictors <- predict(model_A, newdata = newdata, type = "link", se.fit = TRUE)
+lin_predictors
+
+# Get 90% confidence intervals
+alpha <- 0.10
+z <- qnorm(1 - alpha / 2)
+ci_logit <- cbind(lin_predictors$fit - z * lin_predictors$se.fit, lin_predictors$fit + z * lin_predictors$se.fit)
+ci <- plogis(ci_logit)
+
+fitted_values_ci <- data.frame(
+  conc = newdata$conc,
+  dead = bliss$dead,
+  predictions = predictions,
+  ci_lower = ci[, 1],
+  ci_upper = ci[, 2]
+)
+
+# Plot the data and the resulting fit with 90% CI
+ggplot(data = bliss, aes(x = conc, y = dead / 30)) +
+  geom_point() +
+  geom_line(aes(y = predictions, color = "Fitted Line"), data = fitted_values_ci, size = 1) +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), data = fitted_values_ci, alpha = 0.2, fill = "blue") +
+  scale_color_manual(name = "Legend", values = c("Original Ratio" = "blue", "Fitted Line" = "black")) +
+  labs(title = "Ratio of Dead and Total Insects with 90% CI", x = "Concentration", y = "Dead / Total") +
+  theme_minimal()
+```
+
+## (f)
+
+```{r}
+model_B <- glm(cbind(dead, 30 - dead) ~ conc, data = bliss, family = binomial(link = "probit"))
+summary(model_B)
+predict(model_B, newdata = newdata, type = "response")
+
+# Get 90% confidence intervals
+lin_predictors <- predict(model_B, newdata = newdata, type = "link", se.fit = TRUE)
+ci_probit <- cbind(lin_predictors$fit - z * lin_predictors$se.fit, lin_predictors$fit + z * lin_predictors$se.fit)
+ci <- pnorm(ci_probit)
+
+fitted_values_ci <- data.frame(
+  conc = newdata$conc,
+  dead = bliss$dead,
+  predictions = predictions,
+  ci_lower = ci[, 1],
+  ci_upper = ci[, 2]
+)
+
+# Plot the data and the resulting fit with 90% CI
+ggplot(data = bliss, aes(x = conc, y = dead / 30)) +
+  geom_point() +
+  geom_line(aes(y = predictions, color = "Fitted Line"), data = fitted_values_ci, size = 1) +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), data = fitted_values_ci, alpha = 0.2, fill = "blue") +
+  scale_color_manual(name = "Legend", values = c("Original Ratio" = "blue", "Fitted Line" = "black")) +
+  labs(title = "Ratio of Dead and Total Insects with 90% CI", x = "Concentration", y = "Dead / Total") +
+  theme_minimal()
+```
+
+## (g)
+
+```{r}
+newdata <- data.frame(conc = seq(-1, 5, length.out = 100))
+predicted_logit <- predict(model_A, newdata = newdata, type = "link")
+predicted_probit <- predict(model_B, newdata = newdata, type = "link")
+predicted_ratio <- predicted_logit / predicted_probit
+
+comparison_data <- data.frame(
+  conc = newdata$conc,
+  predicted_ratio = predicted_ratio
+)
+
+ggplot(comparison_data, aes(x = conc, y = predicted_ratio)) +
+  geom_line(color = "green", size = 1) +
+  labs(title = "Comparison of Logit and Probit Predictions (Ratio)", x = "Concentration", y = "Ratio (Logit / Probit)") +
+  theme_minimal()
+```
+
+They never reach the same predicted value, but the closest ratio is around the concentration of 2 with 1.4.
+
+## (h)
+
+```{r}
+model_C <- glm(cbind(dead, 30 - dead) ~ conc, data = bliss, family = binomial(link = "logit"))
+
+beta0 <- coef(model_C)[1]
+beta1 <- coef(model_C)[2]
+p = 0.5
+
+log_odds = logit(p)
+# logit(p) = beta0 + beta1 * conc
+ld50_conc <- (log_odds - beta0) / beta1
+ld50_conc
+```
+
+The lethal dose where 50% of insects die is 2.
