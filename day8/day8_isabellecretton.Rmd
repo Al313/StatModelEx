@@ -1,0 +1,247 @@
+---
+title: "Week 8 Solutions"
+author: "Isabelle Caroline Rose Cretton"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: pdflatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(ggplot2)
+library(faraway)  # for the bliss dataset
+```
+
+## Problem 1: Logistic Regression
+
+### (a) Data Exploration
+
+```{r data-exploration}
+# Load the data
+data(bliss, package = "faraway")
+
+# Calculate total insects and ratio
+bliss$ratio <- bliss$dead / (bliss$dead + bliss$alive)
+
+# Plot the ratio vs concentration
+ggplot(bliss, aes(x = conc, y = ratio)) +
+  geom_point() +
+  labs(title = "Ratio of Dead Insects vs. Insecticide Concentration",
+       x = "Concentration",
+       y = "Proportion of Dead Insects") +
+  theme_minimal()
+```
+
+### (b) Logistic Regression with Logit Link
+
+```{r logit-regression}
+# Fit logistic regression
+logit_model <- glm(cbind(dead, alive) ~ conc, 
+                   family = binomial(link = "logit"), 
+                   data = bliss)
+
+# Display results
+summary(logit_model)
+```
+
+### (c) Manual Prediction Calculation
+
+```{r manual-prediction}
+# Calculate predicted values manually
+coeffs <- coef(logit_model)
+linear_pred <- coeffs[1] + coeffs[2] * bliss$conc
+manual_pred <- exp(linear_pred) / (1 + exp(linear_pred))
+
+# Compare with fitted values
+fitted_pred <- fitted(logit_model)
+
+# Compare results
+comparison_df <- data.frame(
+  concentration = bliss$conc,
+  manual = manual_pred,
+  fitted = fitted_pred,
+  difference = abs(manual_pred - fitted_pred)
+)
+print(comparison_df)
+```
+
+### (d) Add Predicted Probabilities to Plot
+
+```{r predicted-plot}
+# Create prediction grid
+pred_grid <- data.frame(conc = seq(min(bliss$conc), max(bliss$conc), length.out = 100))
+pred_grid$pred <- predict(logit_model, newdata = pred_grid, type = "response")
+
+ggplot() +
+  geom_point(data = bliss, aes(x = conc, y = ratio)) +
+  geom_line(data = pred_grid, aes(x = conc, y = pred), color = "blue") +
+  labs(title = "Observed Proportions and Predicted Probabilities (Logit)",
+       x = "Concentration",
+       y = "Proportion of Dead Insects") +
+  theme_minimal()
+```
+
+### (e) Add Confidence Intervals
+
+```{r confidence-intervals}
+# Calculate confidence intervals
+pred_ci <- predict(logit_model, 
+                  newdata = pred_grid, 
+                  type = "link", 
+                  se.fit = TRUE)
+
+# Transform to probability scale
+ci_lower <- plogis(pred_ci$fit - 1.645 * pred_ci$se.fit)  # 90% CI
+ci_upper <- plogis(pred_ci$fit + 1.645 * pred_ci$se.fit)
+
+# Add to plot
+pred_grid$lower <- ci_lower
+pred_grid$upper <- ci_upper
+
+ggplot() +
+  geom_point(data = bliss, aes(x = conc, y = ratio)) +
+  geom_line(data = pred_grid, aes(x = conc, y = pred), color = "blue") +
+  geom_ribbon(data = pred_grid, 
+              aes(x = conc, ymin = lower, ymax = upper),
+              alpha = 0.2) +
+  labs(title = "Logistic Regression with 90% Confidence Interval",
+       x = "Concentration",
+       y = "Proportion of Dead Insects") +
+  theme_minimal()
+```
+
+### (f) Probit Link Function
+
+```{r probit-regression}
+# Fit probit model
+probit_model <- glm(cbind(dead, alive) ~ conc, 
+                    family = binomial(link = "probit"), 
+                    data = bliss)
+
+# Get predictions
+pred_grid$probit_pred <- predict(probit_model, 
+                                newdata = pred_grid, 
+                                type = "response")
+
+# Calculate confidence intervals
+probit_ci <- predict(probit_model, 
+                    newdata = pred_grid, 
+                    type = "link", 
+                    se.fit = TRUE)
+
+pred_grid$probit_lower <- pnorm(probit_ci$fit - 1.645 * probit_ci$se.fit)
+pred_grid$probit_upper <- pnorm(probit_ci$fit + 1.645 * probit_ci$se.fit)
+
+# Plot both models
+ggplot() +
+  geom_point(data = bliss, aes(x = conc, y = ratio)) +
+  geom_line(data = pred_grid, aes(x = conc, y = pred, color = "Logit")) +
+  geom_line(data = pred_grid, aes(x = conc, y = probit_pred, color = "Probit")) +
+  geom_ribbon(data = pred_grid, 
+              aes(x = conc, ymin = lower, ymax = upper),
+              alpha = 0.1, fill = "blue") +
+  geom_ribbon(data = pred_grid, 
+              aes(x = conc, ymin = probit_lower, ymax = probit_upper),
+              alpha = 0.1, fill = "red") +
+  scale_color_manual(values = c("blue", "red")) +
+  labs(title = "Comparison of Logit and Probit Models",
+       x = "Concentration",
+       y = "Proportion of Dead Insects",
+       color = "Model") +
+  theme_minimal()
+```
+
+### (g) Compare Logit and Probit Predictions
+
+```{r model-comparison}
+# Create comparison grid
+comp_grid <- data.frame(conc = seq(-1, 5, length.out = 100))
+
+# Get predictions
+comp_grid$logit_pred <- predict(logit_model, 
+                               newdata = comp_grid, 
+                               type = "response")
+comp_grid$probit_pred <- predict(probit_model, 
+                                newdata = comp_grid, 
+                                type = "response")
+comp_grid$ratio <- comp_grid$logit_pred / comp_grid$probit_pred
+
+ggplot(comp_grid, aes(x = conc, y = ratio)) +
+  geom_line() +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "red") +
+  labs(title = "Ratio of Logit to Probit Predictions",
+       x = "Concentration",
+       y = "Logit/Probit Ratio") +
+  theme_minimal()
+```
+
+### (h) Calculate LD50
+
+```{r ld50}
+# For logit model, LD50 is when logit = 0
+coeffs <- coef(logit_model)
+ld50 <- -coeffs[1] / coeffs[2]
+print(paste("LD50 (concentration at which 50% die):", round(ld50, 3)))
+```
+
+## Problem 2: Exponential Family
+
+The exponential family has the form:
+
+$f(y; \theta, \phi) = exp((y\theta - b(\theta))/\phi + c(y, \phi))$
+
+### (a) Exponential Distribution
+
+The probability density function is:
+$f(y; \lambda) = \lambda e^{-\lambda y}$
+
+We can rewrite this as:
+$f(y; \lambda) = exp(log(\lambda) - \lambda y) = exp(-\lambda y + log(\lambda))$
+
+This belongs to the exponential family with:
+
+* $\theta = -\lambda$
+* $\phi = 1$
+* $b(\theta) = -log(-\theta)$
+* $c(y, \phi) = 0$
+
+### (b) Binomial Distribution
+
+The probability density function is:
+$f(y; \pi) = {n \choose y}\pi^y(1-\pi)^{n-y}$
+
+We can rewrite this as:
+$f(y; \pi) = exp(y log(\pi/(1-\pi)) + n log(1-\pi) + log({n \choose y}))$
+$\phantom{f(y; \pi)} = exp(y\theta - n log(1 + e^\theta) + log({n \choose y}))$
+
+where $\theta = log(\pi/(1-\pi))$
+
+This belongs to the exponential family with:
+
+* $\theta = log(\pi/(1-\pi))$
+* $\phi = 1$
+* $b(\theta) = n log(1 + e^\theta)$
+* $c(y, \phi) = log({n \choose y})$
+
+### (c) Uniform Distribution
+
+The probability density function is:
+$f(y; \theta) = 1/\theta, \quad 0 < y < \theta$
+
+This cannot be written in exponential family form because the support of $y$ depends on $\theta$.
+
+### (d) Normal Distribution (known variance)
+
+The probability density function is:
+$f(y; \mu, \sigma^2) = (1/\sqrt{2\pi\sigma^2})exp(-(y-\mu)^2/(2\sigma^2))$
+
+We can rewrite this as:
+$f(y; \mu, \sigma^2) = exp(y\mu/\sigma^2 - \mu^2/(2\sigma^2) - y^2/(2\sigma^2) - (1/2)log(2\pi\sigma^2))$
+
+This belongs to the exponential family with:
+
+* $\theta = \mu$
+* $\phi = \sigma^2$
+* $b(\theta) = \theta^2/2$
+* $c(y, \phi) = -y^2/(2\phi) - (1/2)log(2\pi\phi)$
