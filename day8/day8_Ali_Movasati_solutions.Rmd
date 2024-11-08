@@ -59,10 +59,10 @@ head(bliss)
 
 ```{r}
 
-bliss %<>% mutate(total = alive + dead)
+bliss %<>% mutate(ratio = dead/(alive + dead))
 
 
-logit_model <- glm(cbind(alive,dead)~conc, family = binomial(link=logit), data = bliss)
+logit_model <- glm(cbind(dead,alive)~conc, family = binomial(link=logit), data = bliss)
 
 summary(logit_model)
 
@@ -76,7 +76,7 @@ summary(logit_model)
 
 logit_model_out <- predict(logit_model, newdata=data.frame(conc=seq(-1,to=5,length.out=100)), type="response")
 
-plot(alive/total~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
+plot(ratio~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
 
 points(bliss$conc, logit_model$fitted.values, pch=0, col="red", cex=2)
 
@@ -89,7 +89,7 @@ points(bliss$conc, logit_model$fitted.values, pch=0, col="red", cex=2)
 
 ```{r}
 
-plot(alive/total~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
+plot(ratio~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
 
 points(bliss$conc, logit_model$fitted.values, pch=0, col="red", cex=2)
 lines(seq(-1,to=5,length.out=100),logit_model_out, col = "red")
@@ -120,7 +120,7 @@ new_data$lower_prob <- 1 / (1 + exp(-new_data$lower))
 
 # plot
 
-plot(alive/total~conc, xlim = c(-1,5), ylim = c(0,1), cex=2, data=bliss)
+plot(ratio~conc, xlim = c(-1,5), ylim = c(0,1), cex=2, data=bliss)
 
 points(bliss$conc, logit_model$fitted.values, pch=0, col="red", cex=2)
 
@@ -139,13 +139,13 @@ lines(new_data$conc,new_data$upper_prob, col = "blue", lty = "dashed")
 
 
 
-probit_model <- glm(cbind(alive,dead)~conc, family = binomial(link=probit), data = bliss)
+probit_model <- glm(cbind(dead, alive)~conc, family = binomial(link=probit), data = bliss)
 
 summary(probit_model)
 
 probit_model_out <- predict(probit_model, newdata=data.frame(conc=seq(-1,to=5,length.out=100)), type="response")
 
-plot(alive/total~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
+plot(ratio~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
 
 points(bliss$conc, probit_model$fitted.values, pch=0, col="blue", cex=2)
 
@@ -160,7 +160,7 @@ lines(seq(-1,to=5,length.out=100),probit_model_out, col = "blue")
 ```{r}
 
 
-plot(alive/total~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
+plot(ratio~conc, xlim = c(-1,5), ylim = c(0,1), data=bliss)
 lines(seq(-1,to=5,length.out=100),logit_model_out, col = "red")
 lines(seq(-1,to=5,length.out=100),probit_model_out, col = "blue")
 
