@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/MacPorts 2023.66589_2) (preloaded format=xelatex 2023.12.15)  8 NOV 2024 11:44
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/MacPorts 2023.66589_2) (preloaded format=xelatex 2023.12.15)  9 NOV 2024 14:11
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -875,23 +875,25 @@ File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
 (Font)              Font shape `TU/lmtt/b/n' tried instead on input line 130.
+[1
 
-Overfull \hbox (1.59032pt too wide) in paragraph at lines 197--198
+]
+Overfull \hbox (1.59032pt too wide) in paragraph at lines 219--220
 []\TU/lmr/m/n/10 skim_variable  
  []
 
 
-Overfull \hbox (2.19363pt too wide) in paragraph at lines 199--200
+Overfull \hbox (2.19363pt too wide) in paragraph at lines 221--222
  []\TU/lmr/m/n/10 n_missing
  []
 
 
-Overfull \hbox (3.19032pt too wide) in paragraph at lines 201--202
+Overfull \hbox (3.19032pt too wide) in paragraph at lines 223--224
  []\TU/lmr/m/n/10 complete_rate
  []
 
 
-Overfull \hbox (1.74783pt too wide) in paragraph at lines 203--204
+Overfull \hbox (1.74783pt too wide) in paragraph at lines 225--226
  []\TU/lmr/m/n/10 mean
  []
 
@@ -935,9 +937,6 @@ Missing character: There is no ▁ (U+2581) in font [lmroman10-regular]:mapping=
 ex-text;!
 Missing character: There is no ▇ (U+2587) in font [lmroman10-regular]:mapping=t
 ex-text;!
-[1
-
-]
 File: day8_final_files/figure-latex/graphic summary-1.pdf Graphic file (type pd
 f)
 <use day8_final_files/figure-latex/graphic summary-1.pdf>
@@ -945,52 +944,48 @@ f)
 File: day8_final_files/figure-latex/predicted-plot-1.pdf Graphic file (type pdf
 )
 <use day8_final_files/figure-latex/predicted-plot-1.pdf>
-
-Overfull \vbox (0.24666pt too high) detected at line 384
- []
-
-[4]
+[4] [5]
 File: day8_final_files/figure-latex/confidence-intervals-1.pdf Graphic file (ty
 pe pdf)
 <use day8_final_files/figure-latex/confidence-intervals-1.pdf>
-
-Underfull \vbox (badness 2158) detected at line 409
- []
-
-[5]
+[6]
 File: day8_final_files/figure-latex/visualize both models-1.pdf Graphic file (t
 ype pdf)
 <use day8_final_files/figure-latex/visualize both models-1.pdf>
-[6]
+
+Overfull \vbox (0.8471pt too high) detected at line 471
+ []
+
+[7]
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 7.0pt on input line 441.
+(Font)              scaled to size 7.0pt on input line 482.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 5.0pt on input line 441.
+(Font)              scaled to size 5.0pt on input line 482.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 10.00092pt on input line 441.
+(Font)              scaled to size 10.00092pt on input line 482.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 7.00064pt on input line 441.
+(Font)              scaled to size 7.00064pt on input line 482.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 5.00046pt on input line 441.
+(Font)              scaled to size 5.00046pt on input line 482.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 9.99893pt on input line 441.
+(Font)              scaled to size 9.99893pt on input line 482.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 6.99925pt on input line 441.
+(Font)              scaled to size 6.99925pt on input line 482.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 4.99947pt on input line 441.
+(Font)              scaled to size 4.99947pt on input line 482.
 
 Package amsmath Warning: Foreign command \atopwithdelims;
 (amsmath)                \frac or \genfrac should be used instead
-(amsmath)                 on input line 469.
+(amsmath)                 on input line 510.
 
-[7] [8] (./day8_final.aux) ) 
+[8] (./day8_final.aux) ) 
 Here is how much of TeX's memory you used:
- 20366 strings out of 477890
- 375000 string characters out of 5827170
- 1871018 words of memory out of 5000000
- 40254 multiletter control sequences out of 15000+600000
+ 20372 strings out of 477890
+ 375027 string characters out of 5827170
+ 1862018 words of memory out of 5000000
+ 40260 multiletter control sequences out of 15000+600000
  518730 words of font info for 84 fonts, out of 8000000 for 9000
  430 hyphenation exceptions out of 8191
- 86i,7n,121p,1007b,371s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 86i,7n,121p,1007b,552s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on day8_final.pdf (8 pages).

@@ -154,6 +154,8 @@ ggplot() +
 ```
 
 
+## 1.F)
+
 ```{r probit-regression}
 # Fit probit model
 probit_model <- glm(cbind(dead, alive) ~ conc, 
@@ -177,6 +179,9 @@ pred_grid$probit_upper <- pnorm(probit_ci$fit + 1.645 * probit_ci$se.fit)
 
 ```
 
+
+## 1.G)
+
 ```{r visualize both models}
 
 # Plot both models
@@ -199,6 +204,20 @@ ggplot() +
   theme_minimal()
 ```
 
+
+
+## 1.H)
+
+
+```{r}
+
+
+logit_model_out <- predict(logit_model, newdata=data.frame(conc=seq(-1,to=5,length.out=100000)), type="response")
+ld50 <- round(seq(-1,to=5,length.out=100000)[which.min(abs(logit_model_out-0.5))])
+
+print(paste0("LD50 or the dose at which there is 50% chance of survival is ", ld50))
+
+```
 
 
 ## Problem 2: Exponential Family
@@ -242,31 +261,13 @@ This belongs to the exponential family with:
 
 ### (c) Uniform Distribution
 
--- version 1
+
 
 The probability density function is:
 $f(y; \theta) = 1/\theta, \quad 0 < y < \theta$
 
 This cannot be written in exponential family form because the support of $y$ depends on $\theta$.
 
--- version 2
-
-The probability density function is:
-The continuous uniform distribution \( \text{Uniform}(a, b) \) has the following probability density function:
-
-\[
-p(x \mid a, b) = \frac{1}{b - a}, \quad x \in [a, b].
-\]
-
-where:
-
-1. **Sufficient statistic** \( \phi \): Since the distribution is constant over \([a, b]\), it does not depend on \( x \). Thus, we set \( \phi = 0 \).
-
-2. **Natural parameter** \( \theta \): The natural parameter, \( \theta \), is also zero, as there’s no variation in \( x \) in the density.
-
-3. **Base measure** \( c(y, \phi) \): This is the constant \( c(y, \phi) = \frac{1}{b - a} \), representing the flat density within the interval \([a, b]\).
-
-4. **Log-partition function** \( b(\theta) \): Since there’s no dependence on \( x \) or \( \theta \), we have \( b(\theta) = 0 \).
 
 
 ### (d) Normal Distribution (known variance)
@@ -279,16 +280,7 @@ $f(y; \mu, \sigma^2) = (1/\sqrt{2\pi\sigma^2})exp(-(y-\mu)^2/(2\sigma^2))$
 We can rewrite this as:
 $f(y; \mu, \sigma^2) = exp(y\mu/\sigma^2 - \mu^2/(2\sigma^2) - y^2/(2\sigma^2) - (1/2)log(2\pi\sigma^2))$
 
--- Version 1
 
-This belongs to the exponential family with:
-
-* $\theta = \mu$
-* $\phi = \sigma^2$
-* $b(\theta) = \theta^2/2$
-* $c(y, \phi) = -y^2/(2\phi) - (1/2)log(2\pi\phi)$
-
--- Version 2
 
 * **Natural parameter**: \( \theta = \frac{\mu}{\sigma^2} \)
 * **Dispersion parameter**: \( \phi = \sigma^2 \)
