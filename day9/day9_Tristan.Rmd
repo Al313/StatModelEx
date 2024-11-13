@@ -1,8 +1,8 @@
 ---
 title:  
-    "Day8 exercise solutions"
+    "Day9 exercise solutions"
 date: 
-    "Oct. 4th, 2024"
+    "Nov. 15th, 2024"
 author:  
     "Ali Movasati, Isabelle Caroline Rose Cretton, Tristan Koning"  
 output:  
@@ -16,7 +16,13 @@ header-includes:
 ```{r global options}
 
 # Set global code chunk options
-knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
 
 ```
 
@@ -29,6 +35,9 @@ library("skimr")
 library("dplyr")
 library("magrittr")
 library("ggplot2")
+library("survival")
+library("survminer")
+library("gridExtra")
 
 # define functions
 `%notin%` <- Negate(`%in%`)
@@ -71,7 +80,7 @@ x <- seq(0, 10, 0.1)
 density_data <- expand.grid(x = x, beta = beta) %>%
   mutate(density = log_logistic_density(x, alpha, beta))
 
-ggplot(density_data, aes(x = x, y = density, color = as.factor(beta))) +
+p1 <- ggplot(density_data, aes(x = x, y = density, color = as.factor(beta))) +
   geom_line() +
   labs(title = "Log-logistic Density Function", x = "x", y = "Density", color = "Beta") +
   theme_minimal()
@@ -80,7 +89,7 @@ ggplot(density_data, aes(x = x, y = density, color = as.factor(beta))) +
 cdf_data <- expand.grid(x = x, beta = beta) %>%
   mutate(density = log_logistic_cdf(x, alpha, beta))
 
-ggplot(cdf_data, aes(x = x, y = density, color = as.factor(beta))) +
+p2 <- ggplot(cdf_data, aes(x = x, y = density, color = as.factor(beta))) +
     geom_line() +
     labs(title = "Log-logistic CDF", x = "x", y = "CDF", color = "Beta") +
     theme_minimal()
@@ -89,7 +98,7 @@ ggplot(cdf_data, aes(x = x, y = density, color = as.factor(beta))) +
 survivor_data <- expand.grid(x = x, beta = beta) %>%
   mutate(density = log_logistic_survivor(x, alpha, beta))
 
-ggplot(survivor_data, aes(x = x, y = density, color = as.factor(beta))) +
+p3 <- ggplot(survivor_data, aes(x = x, y = density, color = as.factor(beta))) +
     geom_line() +
     labs(title = "Log-logistic Survivor Function", x = "x", y = "Survivor Function", color = "Beta") +
     theme_minimal()
@@ -98,17 +107,19 @@ ggplot(survivor_data, aes(x = x, y = density, color = as.factor(beta))) +
 hazard_data <- expand.grid(x = x, beta = beta) %>%
   mutate(density = log_logistic_hazard(x, alpha, beta))
 
-ggplot(hazard_data, aes(x = x, y = density, color = as.factor(beta))) +
+p4 <- ggplot(hazard_data, aes(x = x, y = density, color = as.factor(beta))) +
     geom_line() +
     labs(title = "Log-logistic Hazard Function", x = "x", y = "Hazard Function", color = "Beta") +
     theme_minimal()
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
 ```
 
 ## (b)
 
 ```{r}
 sigma <- 1
-k <- seq (0.1, 2, 0.1)
+k <- c(0.5, 1, 2)
 x <- seq(0, 10, 0.1)
 
 # k1
@@ -126,5 +137,82 @@ ggplot(density_data, aes(x = x, y = density, color = as.factor(k))) +
 ## (a)
 
 ```{r}
+pbc_data <- read.table("data/pbc.txt", header = TRUE)
+pbc_data$treat <- factor(pbc_data$treat, levels = c(1, 2), labels = c("Placebo", "Treatment"))
+skim(pbc_data)
 
+pbc_data$surv <- Surv(pbc_data$time, pbc_data$cenc0)
+head(pbc_data$surv)
+```
+
+## (b)
+
+```{r}
+sfit <- survfit(surv ~ treat, data = pbc_data)
+summary(sfit)
+
+sfit_data <- as.data.frame(sfit$time)
+sfit_data$surv <- sfit$surv
+sfit_data$strata <- rep(names(sfit$strata), sfit$strata)
+
+ggsurvplot(
+  sfit,
+  data = pbc_data,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE,
+  risk.table.col = "strata",
+  linetype = "strata",
+  palette = c("red", "blue"),
+  xlab = "Time",
+  ylab = "Survival Probability",
+  title = "Survival Probability by Treatment",
+  ggtheme = theme_minimal()
+)
+
+```
+
+We cannot see a clear difference in survival between the two treatments. In fact, the Placebo group even has a higher Survival Probability for a while.
+
+## (c)
+
+```{r}
+sdiff <- survdiff(surv ~ treat, data = pbc_data)
+sdiff
+```
+
+We get a p-value of 1, which means that there is no significant difference in survival between the two treatments.
+
+## (d)
+
+```{r}
+cox_model <- coxph(surv ~ treat, data = pbc_data)
+summary(cox_model)
+```
+
+We get a p-value of 1, which means that there is no significant difference in survival between the two treatments.
+
+## (e)
+
+```{r}
+cox_model2 <- coxph(surv ~ treat + age + cenc0, data = pbc_data)
+summary(cox_model2)
+```
+
+By adding both age and cenc0 as predictors, we get a highly significant p-value in both the Likelihood ratio and logrank test, but surprisingly, the p-value for the Wald test is 0.9. This could be due to the fact that we have a small sample size.
+We can also observe a high Concordance of 0.949, which indicates that the model is good at predicting the data.
+
+The hazard rate for utilizing the treatment is by a factor of 0.944 smaller than without the treatment, for age it is by a factor of 1.014 and for cenc0 it is 1.181.
+
+## (f)
+
+```{r}
+# Model 1: Only treatment
+cox.zph(cox_model)
+plot(cox.zph(cox_model))
+
+# Model 2: Treatment, age and cenc0
+par(mfrow = c(2, 2))
+cox.zph(cox_model2)
+plot(cox.zph(cox_model2))
 ```
