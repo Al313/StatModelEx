@@ -1,0 +1,292 @@
+---
+title: "Week 9 Solutions"
+author: "Isabelle Caroline Rose Cretton"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+
+# Load required packages
+library(survival)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+```
+
+# Problem 1: Log-logistic distribution
+
+## (a) Plot density, distribution, survival, and hazard functions
+
+```{r log_logistic_plots}
+# Define the functions
+loglogistic_density <- function(x, alpha = 1, beta) {
+  (beta/alpha) * (x/alpha)^(beta-1) / (1 + (x/alpha)^beta)^2
+}
+
+loglogistic_distribution <- function(x, alpha = 1, beta) {
+  (x^beta) / (alpha^beta + x^beta)
+}
+
+loglogistic_survival <- function(x, alpha = 1, beta) {
+  1 - loglogistic_distribution(x, alpha, beta)
+}
+
+loglogistic_hazard <- function(x, alpha = 1, beta) {
+  loglogistic_density(x, alpha, beta) / loglogistic_survival(x, alpha, beta)
+}
+
+# Create x values
+x <- seq(0.01, 5, length.out = 1000)
+beta_values <- c(0.25, 0.5, 1, 4, 8)
+
+# Create plots
+par(mfrow = c(2, 2))
+
+# Density plot
+plot(x, loglogistic_density(x, beta = beta_values[1]), type = "l", 
+     ylim = c(0, 2), main = "Density Function", 
+     xlab = "x", ylab = "f(x)")
+for(beta in beta_values[-1]) {
+  lines(x, loglogistic_density(x, beta = beta), col = which(beta_values == beta))
+}
+legend("topright", legend = paste("beta =", beta_values), 
+       col = 1:length(beta_values), lty = 1)
+
+# Distribution plot
+plot(x, loglogistic_distribution(x, beta = beta_values[1]), type = "l",
+     ylim = c(0, 1), main = "Distribution Function",
+     xlab = "x", ylab = "F(x)")
+for(beta in beta_values[-1]) {
+  lines(x, loglogistic_distribution(x, beta = beta), col = which(beta_values == beta))
+}
+legend("bottomright", legend = paste("beta =", beta_values),
+       col = 1:length(beta_values), lty = 1)
+
+# Survival plot
+plot(x, loglogistic_survival(x, beta = beta_values[1]), type = "l",
+     ylim = c(0, 1), main = "Survival Function",
+     xlab = "x", ylab = "S(x)")
+for(beta in beta_values[-1]) {
+  lines(x, loglogistic_survival(x, beta = beta), col = which(beta_values == beta))
+}
+legend("topright", legend = paste("beta =", beta_values),
+       col = 1:length(beta_values), lty = 1)
+
+# Hazard plot
+plot(x, loglogistic_hazard(x, beta = beta_values[1]), type = "l",
+     ylim = c(0, 5), main = "Hazard Function",
+     xlab = "x", ylab = "h(x)")
+for(beta in beta_values[-1]) {
+  lines(x, loglogistic_hazard(x, beta = beta), col = which(beta_values == beta))
+}
+legend("topright", legend = paste("beta =", beta_values),
+       col = 1:length(beta_values), lty = 1)
+```
+
+```{r log_logistic_summary, results='asis'}
+# Create summary table for log-logistic distribution characteristics
+log_logistic_chars <- data.frame(
+  "Parameter" = c("beta < 1", "beta = 1", "beta > 1"),
+  "Density Shape" = c("Right-skewed with high peak near zero",
+                     "Balanced shape",
+                     "More symmetric, bell-shaped"),
+  "Hazard Behavior" = c("Decreasing hazard",
+                       "Constant hazard",
+                       "Initially increasing then decreasing")
+)
+
+kable(log_logistic_chars,
+      caption = "Log-logistic Distribution Characteristics",
+      align = c('l', 'l', 'l'),
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "hold_position"),
+                full_width = FALSE)
+```
+
+## (b) Weibull Distribution Analysis
+
+```{r weibull_plots}
+# Define Weibull density function
+weibull_density <- function(x, sigma = 1, kappa) {
+  (kappa/sigma) * (x/sigma)^(kappa-1) * exp(-(x/sigma)^kappa)
+}
+
+# Create plots for different kappa values
+x <- seq(0.01, 5, length.out = 1000)
+kappa_values <- c(0.5, 1, 2)  # One from each case
+
+par(mfrow = c(1,1))
+plot(x, weibull_density(x, kappa = kappa_values[1]), type = "l",
+     ylim = c(0, 1.5), main = "Weibull Density for Different Kappa Values",
+     xlab = "x", ylab = "f(x)")
+for(kappa in kappa_values[-1]) {
+  lines(x, weibull_density(x, kappa = kappa), col = which(kappa_values == kappa))
+}
+legend("topright", legend = paste("kappa =", kappa_values),
+       col = 1:length(kappa_values), lty = 1)
+```
+
+```{r weibull_summary, results='asis'}
+# Create summary table for Weibull distribution characteristics
+weibull_chars <- data.frame(
+  "Parameter Range" = c("0 < kappa < 1", "kappa = 1", "kappa > 1"),
+  "Characteristics" = c("Monotonically decreasing, infinite peak at x = 0",
+                       "Reduces to exponential distribution",
+                       "Peak away from zero, right-skewed")
+)
+
+kable(weibull_chars,
+      caption = "Weibull Distribution Characteristics (sigma = 1)",
+      align = c('l', 'l'),
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "hold_position"),
+                full_width = FALSE)
+```
+
+# Problem 2: Survival Analysis of PBC Data
+
+```{r data_prep}
+# Load and prepare data
+pbc_data <- read.table("data/pbc.txt", header = TRUE)
+
+# Convert treat to factor
+pbc_data$treat <- factor(pbc_data$treat, 
+                        levels = c(1, 2),
+                        labels = c("Placebo", "Treatment"))
+
+# Create survival object
+surv_obj <- Surv(time = pbc_data$time, event = pbc_data$d)
+
+# Fit survival curves
+km_fit <- survfit(surv_obj ~ treat, data = pbc_data)
+```
+
+## Kaplan-Meier Analysis
+
+```{r km_plot}
+# Plot Kaplan-Meier curves
+par(mfrow = c(1,1))
+plot(km_fit, 
+     main = "Kaplan-Meier Survival Curves by Treatment Group",
+     xlab = "Time", 
+     ylab = "Survival Probability",
+     col = c("blue", "red"),
+     lwd = 2)
+legend("topright", 
+       legend = levels(pbc_data$treat),
+       col = c("blue", "red"),
+       lty = 1,
+       lwd = 2)
+```
+
+## Statistical Analysis
+
+```{r model_analysis}
+# Fit models
+cox_model1 <- coxph(surv_obj ~ treat, data = pbc_data)
+cox_model2 <- coxph(surv_obj ~ treat + age + cenc0, data = pbc_data)
+log_rank <- survdiff(surv_obj ~ treat, data = pbc_data)
+test.ph1 <- cox.zph(cox_model1)
+test.ph2 <- cox.zph(cox_model2)
+```
+
+```{r model_summaries, results='asis'}
+# Function to create formatted Cox model results
+create_cox_table <- function(model) {
+  coef_table <- summary(model)$coefficients
+  conf_table <- summary(model)$conf.int
+  
+  results_df <- data.frame(
+    Variable = rownames(coef_table),
+    "Hazard Ratio" = sprintf("%.2f", conf_table[, "exp(coef)"]),
+    "95% CI" = sprintf("(%.2f, %.2f)", conf_table[, "lower .95"], conf_table[, "upper .95"]),
+    "P-value" = sprintf("%.3f", coef_table[, "Pr(>|z|)"]),
+    check.names = FALSE
+  )
+  
+  concordance <- sprintf("%.3f", summary(model)$concordance[1])
+  
+  kable(results_df, 
+        caption = paste("Cox Model Results (Concordance =", concordance, ")"),
+        align = c('l', 'c', 'c', 'c'),
+        booktabs = TRUE) %>%
+    kable_styling(latex_options = c("striped", "hold_position"),
+                full_width = FALSE)
+}
+
+# Basic Cox Model Results
+cat("\n### Basic Cox Model\n")
+create_cox_table(cox_model1)
+
+# Extended Cox Model Results
+cat("\n### Extended Cox Model\n")
+create_cox_table(cox_model2)
+
+# Log-rank test results
+cat("\n### Log-rank Test Results\n")
+logrank_df <- data.frame(
+  Group = c("Placebo", "Treatment"),
+  Observed = c(log_rank$obs[1], log_rank$obs[2]),
+  Expected = c(log_rank$exp[1], log_rank$exp[2]),
+  "(O-E)^2/E" = c(
+    (log_rank$obs[1] - log_rank$exp[1])^2/log_rank$exp[1],
+    (log_rank$obs[2] - log_rank$exp[2])^2/log_rank$exp[2]
+  )
+)
+
+kable(logrank_df,
+      caption = sprintf("Log-rank Test Results (p-value = %.3f)", 
+                       1 - pchisq(log_rank$chisq, df = 1)),
+      align = c('l', 'c', 'c', 'c'),
+      digits = 2,
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "hold_position"),
+                full_width = FALSE)
+
+# Proportional hazards test results
+cat("\n### Proportional Hazards Test Results\n")
+ph_df <- data.frame(
+  Variable = rownames(test.ph2$table),
+  "Chi-square" = sprintf("%.2f", test.ph2$table[, "chisq"]),
+  "P-value" = sprintf("%.3f", test.ph2$table[, "p"]),
+  check.names = FALSE
+)
+
+kable(ph_df,
+      caption = "Proportional Hazards Assumption Test",
+      align = c('l', 'c', 'c'),
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "hold_position"),
+                full_width = FALSE)
+
+# Key findings summary
+cat("\n### Key Findings\n")
+findings_df <- data.frame(
+  Category = c("Treatment Effect", "Risk Factors", "Model Performance", "Assumptions"),
+  Finding = c(
+    "17% reduction in hazard (non-significant, p > 0.05)",
+    "Age: 4% increased risk per year (p < 0.001)\nCentral cholestasis: 284% increased risk (p < 0.001)",
+    "Extended model concordance: 0.669\nSignificant improvement over basic model",
+    "Proportional hazards satisfied for all variables (p > 0.05)"
+  )
+)
+
+kable(findings_df, 
+      caption = "Summary of Key Findings",
+      col.names = c("Category", "Details"),
+      align = c('l', 'l'),
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "hold_position"),
+                full_width = FALSE)
+```
