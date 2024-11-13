@@ -1,0 +1,130 @@
+---
+title:  
+    "Day8 exercise solutions"
+date: 
+    "Oct. 4th, 2024"
+author:  
+    "Ali Movasati, Isabelle Caroline Rose Cretton, Tristan Koning"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
+---
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+
+```{r libraries}
+
+
+# load required libraries
+library("skimr")
+library("dplyr")
+library("magrittr")
+library("ggplot2")
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Problem 1
+
+```{r}
+log_logistic_density <- function(x, alpha, beta) {
+    numerator <- (beta / alpha) * (x / alpha) ^ (beta - 1)
+    denominator <- (1 + (x / alpha) ^ beta) ^ 2
+    return(numerator / denominator)
+}
+
+log_logistic_cdf <- function(x, alpha, beta) {
+    numerator <- x ^ beta
+    denominator <- alpha ^ beta + x ^ beta	
+    return(numerator / denominator)
+}
+
+log_logistic_survivor <- function(x, alpha, beta) {
+    return(1 - log_logistic_cdf(x, alpha, beta))
+}
+
+log_logistic_hazard <- function(x, alpha, beta) {
+    return(log_logistic_density(x, alpha, beta) / log_logistic_survivor(x, alpha, beta))
+}
+```
+
+## (a)
+
+```{r}
+alpha <- 1
+beta <- c(0.25, 0.5, 1, 4, 8)
+x <- seq(0, 10, 0.1)
+
+# Density function
+density_data <- expand.grid(x = x, beta = beta) %>%
+  mutate(density = log_logistic_density(x, alpha, beta))
+
+ggplot(density_data, aes(x = x, y = density, color = as.factor(beta))) +
+  geom_line() +
+  labs(title = "Log-logistic Density Function", x = "x", y = "Density", color = "Beta") +
+  theme_minimal()
+
+# CDF
+cdf_data <- expand.grid(x = x, beta = beta) %>%
+  mutate(density = log_logistic_cdf(x, alpha, beta))
+
+ggplot(cdf_data, aes(x = x, y = density, color = as.factor(beta))) +
+    geom_line() +
+    labs(title = "Log-logistic CDF", x = "x", y = "CDF", color = "Beta") +
+    theme_minimal()
+
+# Survivor function
+survivor_data <- expand.grid(x = x, beta = beta) %>%
+  mutate(density = log_logistic_survivor(x, alpha, beta))
+
+ggplot(survivor_data, aes(x = x, y = density, color = as.factor(beta))) +
+    geom_line() +
+    labs(title = "Log-logistic Survivor Function", x = "x", y = "Survivor Function", color = "Beta") +
+    theme_minimal()
+
+# Hazard function
+hazard_data <- expand.grid(x = x, beta = beta) %>%
+  mutate(density = log_logistic_hazard(x, alpha, beta))
+
+ggplot(hazard_data, aes(x = x, y = density, color = as.factor(beta))) +
+    geom_line() +
+    labs(title = "Log-logistic Hazard Function", x = "x", y = "Hazard Function", color = "Beta") +
+    theme_minimal()
+```
+
+## (b)
+
+```{r}
+sigma <- 1
+k <- seq (0.1, 2, 0.1)
+x <- seq(0, 10, 0.1)
+
+# k1
+density_data <- expand.grid(x = x, k = k) %>%
+  mutate(density = dweibull(x, k, sigma))
+
+ggplot(density_data, aes(x = x, y = density, color = as.factor(k))) +
+    geom_line() + 
+    labs(title = "Weibull Density Function", x = "x", y = "Density", color = "k") +
+    theme_minimal()
+```
+
+# Problem 2
+
+## (a)
+
+```{r}
+
+```
