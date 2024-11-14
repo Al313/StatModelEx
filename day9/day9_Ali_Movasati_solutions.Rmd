@@ -1,0 +1,253 @@
+---
+title:  
+    "Day9 exercise solutions"
+date: 
+    "Nov. 13th, 2024"
+author:  
+    "Ali Movasati"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
+---
+
+
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+
+```{r load libraries}
+
+
+# load required libraries
+library("skimr")
+library("dplyr")
+library("magrittr")
+library("ggplot2")
+library("survival")
+library("survminer")
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Problem 1
+
+## 1.A)
+
+```{r define functions}
+# Density function
+log_logistic_density <- function(x, alpha, beta) {
+  (beta/alpha) * (x/alpha)^(beta-1) / (1 + (x/alpha)^beta)^2
+}
+
+# Distribution function
+log_logistic_dist <- function(x, alpha, beta) {
+  (x^beta) / (alpha^beta + x^beta)
+}
+
+# Survival function
+log_logistic_survival <- function(x, alpha, beta) {
+  1 - log_logistic_dist(x, alpha, beta)
+}
+
+# Hazard function
+log_logistic_hazard <- function(x, alpha, beta) {
+  log_logistic_density(x, alpha, beta) / log_logistic_survival(x, alpha, beta)
+}
+```
+
+```{r create plots}
+
+# set parameters
+x <- seq(0, 5, by = 0.01)
+alpha <- 1
+betas <- c(0.25, 0.5, 1, 4, 8)
+colors <- rainbow(length(betas))
+
+
+# Plot density
+plot(NULL, xlim=c(0,5), ylim=c(0,5), 
+     main="Density Function", xlab="x", ylab="f(x)")
+for(i in 1:length(betas)) {
+  lines(x, log_logistic_density(x, alpha, betas[i]), col=colors[i])
+}
+legend("topright", legend=paste("beta =", betas), col=colors, lty=1)
+
+# Plot distribution function
+plot(NULL, xlim=c(0,5), ylim=c(0,1), 
+     main="Distribution Function", xlab="x", ylab="F(x)")
+for(i in 1:length(betas)) {
+  lines(x, log_logistic_dist(x, alpha, betas[i]), col=colors[i])
+}
+legend("bottomright", legend=paste("beta =", betas), col=colors, lty=1)
+
+# Plot survival function
+plot(NULL, xlim=c(0,5), ylim=c(0,1), 
+     main="Survival Function", xlab="x", ylab="S(x)")
+for(i in 1:length(betas)) {
+  lines(x, log_logistic_survival(x, alpha, betas[i]), col=colors[i])
+}
+legend("topright", legend=paste("beta =", betas), col=colors, lty=1)
+
+# Plot hazard function
+plot(NULL, xlim=c(0,5), ylim=c(0,10), 
+     main="Hazard Function", xlab="x", ylab="h(x)")
+for(i in 1:length(betas)) {
+  lines(x, log_logistic_hazard(x, alpha, betas[i]), col=colors[i])
+}
+legend("topright", legend=paste("beta =", betas), col=colors, lty=1)
+
+
+```
+
+## 1.B)
+
+```{r}
+# Create plots to show different shapes for κ < 1, κ = 1, and κ > 1 with σ = 1
+
+# Set up the plotting parameters
+x <- seq(0, 4, by = 0.01)
+sigma <- 1
+
+# Case 1: κ < 1
+kappa_less_1 <- c(0.3, 0.5, 0.7)
+# Case 2: κ = 1 (exponential case)
+kappa_equal_1 <- 1
+# Case 3: κ > 1
+kappa_more_1 <- c(1.5, 2, 3.5)
+
+# Weibull density function
+weibull_density <- function(x, kappa, sigma) {
+  (kappa/sigma) * (x/sigma)^(kappa-1) * exp(-(x/sigma)^kappa)
+}
+
+# Create plot for all cases
+par(mfrow=c(1,3))
+
+# Plot for κ < 1
+plot(NULL, xlim=c(0,4), ylim=c(0,3), 
+     main="Weibull Density (kappa < 1)", 
+     xlab="x", ylab="f(x)")
+for(k in kappa_less_1) {
+  lines(x, weibull_density(x, k, sigma), 
+        col=rainbow(length(kappa_less_1))[which(kappa_less_1 == k)])
+}
+legend("topright", legend=paste("kappa =", kappa_less_1), 
+       col=rainbow(length(kappa_less_1)), lty=1)
+
+# Plot for κ = 1
+plot(NULL, xlim=c(0,4), ylim=c(0,1.2), 
+     main="Weibull Density (kappa = 1)", 
+     xlab="x", ylab="f(x)")
+lines(x, weibull_density(x, kappa_equal_1, sigma), col="blue")
+legend("topright", legend="kappa = 1", col="blue", lty=1)
+
+# Plot for κ > 1
+plot(NULL, xlim=c(0,4), ylim=c(0,2), 
+     main="Weibull Density (kappa > 1)", 
+     xlab="x", ylab="f(x)")
+for(k in kappa_more_1) {
+  lines(x, weibull_density(x, k, sigma), 
+        col=rainbow(length(kappa_more_1))[which(kappa_more_1 == k)])
+}
+legend("topright", legend=paste("kappa =", kappa_more_1), 
+       col=rainbow(length(kappa_more_1)), lty=1)
+```
+
+
+# Problem 2
+
+
+## 2.A)
+
+```{r}
+
+# Load and prepare the data
+pbc_data <- read.table("/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/StatModelEx/day9/data/pbc.txt", header=TRUE)
+
+pbc_data$treat <- as.factor(pbc_data$treat)
+surv_obj <- Surv(pbc_data$time, pbc_data$d)
+```
+
+
+## 2.B)
+
+```{r}
+
+# Compare treatment groups using Kaplan-Meier curves
+km_fit <- survfit(surv_obj ~ treat, data=pbc_data)
+
+ggsurvplot(km_fit,
+           data = pbc_data,
+           pval = TRUE,
+           conf.int = TRUE,
+           risk.table = TRUE,
+           title = "Kaplan-Meier Curves by Treatment Group",
+           legend.labs = c("Placebo", "Treatment"))
+
+```
+
+### <<Comments>>
+
+There appears to be improvement of the survival chance in the treated group compared to placebo group!
+## 2.C)
+
+```{r}
+
+# Log-rank test
+
+log_rank <- survdiff(surv_obj ~ treat, data=pbc_data)
+print(log_rank)
+
+```
+
+
+## 2.D)
+
+```{r}
+
+# Cox model with treatment only
+cox_model1 <- coxph(surv_obj ~ treat, data=pbc_data)
+summary(cox_model1)
+
+```
+
+
+## 2.E)
+
+```{r}
+
+# Cox model with additional predictors
+cox_model2 <- coxph(surv_obj ~ treat + age + cenc0, data=pbc_data)
+summary(cox_model2)
+
+```
+
+### <<Comments>>
+
+## 2.F)
+
+```{r}
+
+# Check proportional hazards assumption
+# For model with treatment only
+test.ph1 <- cox.zph(cox_model1)
+print(test.ph1)
+plot(test.ph1)
+
+# For model with multiple predictors
+test.ph2 <- cox.zph(cox_model2)
+print(test.ph2)
+plot(test.ph2)
+
+```
