@@ -201,8 +201,6 @@ cox_model2 <- coxph(surv_obj ~ treat + age + cenc0, data = pbc_data)
 log_rank <- survdiff(surv_obj ~ treat, data = pbc_data)
 test.ph1 <- cox.zph(cox_model1)
 test.ph2 <- cox.zph(cox_model2)
-plot(test.ph1)
-plot(test.ph2)
 ```
 
 ```{r model_summaries, results='asis'}
@@ -285,6 +283,9 @@ findings_df <- data.frame(
     "Proportional hazards satisfied for all variables (p > 0.05)"
   )
 )
+
+plot(test.ph1)
+plot(test.ph2)
 
 kable(findings_df, 
       caption = "Summary of Key Findings",
