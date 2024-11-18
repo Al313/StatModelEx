@@ -1,6 +1,6 @@
 ---
 title: "Week 10 Solutions - AR1 Process Analysis"
-author: "Assistant Solution"
+author: "Isabelle Caroline Rose Cretton"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
