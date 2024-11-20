@@ -1,0 +1,242 @@
+---
+title:  
+    "Day10 exercise solutions"
+date: 
+    "Nov. 15th, 2024"
+author:  
+    "Ali Movasati, Isabelle Caroline Rose Cretton, Tristan Koning"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
+---
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+
+```
+
+```{r libraries}
+library(ggplot2)
+library(skimr)
+```
+
+# Problem 1
+
+## (a)
+
+```{r Problem 1a}
+set.seed(1)
+# Sequence from 1 to 60
+t <- seq(1, 60, by = 1)
+sigma_2 <- 3
+phi <- 0.6
+
+# AR(1) sequential model
+ar1_seq <- numeric(length(t))
+ar1_seq[1] <- rnorm(1, 0, sigma_2)
+
+for (i in 2:length(t)) {
+  ar1_seq[i] <- phi * ar1_seq[i - 1] + rnorm(1, 0, sigma_2)
+}
+
+# AR(1) direct method model (matrix multiplication)
+ar1_direct <- numeric(length(t))
+ar1_direct[1] <- rnorm(1, 0, sigma_2)
+
+# Create the AR(1) matrix
+sigma_matrix <- matrix(0, nrow = length(t), ncol = length(t))
+
+for (i in 1:length(t)) {
+    for (j in 1:length(t)) {
+        diff <- abs(i - j)
+        sigma_matrix[i, j] <- sigma_2 / ((1 - phi^2) * phi^diff)
+    }
+}
+
+# Generate the AR(1) sequence using matrix multiplication
+ar1_direct <- sigma_matrix %*% rnorm(length(t), 0, sigma_2)
+ar1_direct
+
+# Plot sequential sequence
+ggplot() +
+  geom_line(aes(x = t, y = ar1_seq), col = "blue") +
+  labs(title = "AR(1) sequential model", x = "Time", y = "Value")
+
+# Plot direct sequence
+ggplot() +
+  geom_line(aes(x = t, y = ar1_direct), col = "red") +
+  labs(title = "AR(1) direct model", x = "Time", y = "Value")
+```
+
+## (b)
+
+```{r Problem 1b}
+set.seed(1)
+
+phi <- 0.6
+sigma_2 <- 3
+n <- 60
+y61 <- ar1_seq[60] * phi
+ci <- c(y61 - 1.96 * sqrt(sigma_2), y61 + 1.96 * sqrt(sigma_2))
+ci
+
+print(paste("The 95% confidence interval for the 61st value is [", ci[1], ", ", ci[2], "]"))
+print(paste("The 61st value is ", y61))
+print(paste("E(y61) = phi * y60 = ", phi, " * ", ar1_seq[60], " = ", y61))
+print(paste("Var(y61) = sigma^2 = ", sigma_2))
+```
+
+## (c)
+
+```{r Problem 1c}
+set.seed(1)
+
+# TODO
+```
+
+## (d)
+
+```{r Problem 1d}
+set.seed(1)
+
+nr_simulations <- 1000
+n <- 60
+
+# Function to simulate AR(1) process
+simulate_ar1 <- function(phi, sigma_2, n) {
+    ar1_seq <- numeric(n)
+    ar1_seq[1] <- rnorm(1, 0, sigma_2)
+    
+    for (i in 2:n) {
+        ar1_seq[i] <- phi * ar1_seq[i - 1] + rnorm(1, 0, sigma_2)
+    }
+    
+    return(ar1_seq)
+}
+
+# Function to count zero crossings
+count_zero_crossings <- function(ar1_seq) {
+    zero_crossings <- 0
+    
+    for (i in 2:length(ar1_seq)) {
+        if (ar1_seq[i] * ar1_seq[i - 1] < 0) {
+            zero_crossings <- zero_crossings + 1
+        }
+    }
+    
+    return(zero_crossings)
+}
+
+# Simulate
+nr_zero_crossings <- numeric(nr_simulations)
+for (i in 1:nr_simulations) {
+    ar1_seq <- simulate_ar1(phi, sigma_2, n)
+    nr_zero_crossings[i] <- count_zero_crossings(ar1_seq)
+}
+
+average <- mean(nr_zero_crossings)
+print(paste("The average number of zero crossings is ", average))
+```
+
+## (e)
+
+```{r Problem 1e}
+set.seed(1)
+phi <- 1.1
+sigma_2 <- 3
+n <- 60
+
+seq <- simulate_ar1(phi, sigma_2, n)
+ggplot() +
+  geom_line(aes(x = t, y = seq), col = "blue") +
+  labs(title = "AR(1) sequential model", x = "Time", y = "Value")
+
+print(paste("The sequence is not stationary because phi > 1"))
+```
+
+# Problem 2
+
+## (a)
+
+```{r Problem 2a}
+# Load data
+meatprice <- read.table("day10/data/meatprice.txt", header = TRUE)
+meatprice$Month <- factor(meatprice$Month, levels = c("Jan", "Feb", "Mrz", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"))
+# Look at the data
+head(meatprice)
+skim(meatprice)
+summary(meatprice)
+str(meatprice)
+```
+
+## (b)
+
+```{r Problem 2b}
+meatprice_ts <- ts(meatprice$Price, frequency = 12, start = c(2007, 1))
+
+# Plot the time series
+ggplot() +
+  geom_line(aes(x = time(meatprice_ts), y = meatprice_ts), col = "blue") +
+  labs(title = "Monthly meat prices", x = "Time", y = "Price")
+```
+
+## (c)
+
+```{r Problem 2c}
+meatprice_decomposed <- stl(meatprice_ts, s.window = "periodic")
+plot(meatprice_decomposed)
+```
+
+## (d)
+
+```{r Problem 2d}
+residuals <- meatprice_decomposed$time.series[, "remainder"]
+
+par(mfrow = c(2, 1))
+acf(residuals, main = "ACF of residuals")
+pacf(residuals, main = "PACF of residuals")
+
+print("The ACF and PACF plots show that the residuals are correlated since both ACF and PACF have significant spikes for lags 1 (and 2 for ACF). This means that the residuals are dependent on the immediatly previous value.")
+```
+
+## (e)
+
+```{r Problem 2e}
+seasonal <- meatprice_decomposed$time.series[, "seasonal"]
+
+# Adjust the seasonal component
+meatprice_adjusted <- meatprice_ts - seasonal
+
+plot_data <- data.frame(
+  Time = time(meatprice_ts),
+  Original = as.numeric(meatprice_ts),
+  Adjusted = as.numeric(meatprice_adjusted)
+)
+
+# Plot original and adjusted
+ggplot(plot_data, aes(x = Time)) +
+  geom_line(aes(y = Original, color = "Original")) +
+  geom_line(aes(y = Adjusted, color = "Seasonally Adjusted")) +
+  labs(title = "Monthly Meat Prices", x = "Time", y = "Price") +
+  scale_color_manual(name = "Legend", values = c("Original" = "blue", "Adjusted" = "red")) +
+  theme_minimal()
+```
+
+## (f)
+
+```{r Problem 2f}
+ar_model <- ar(meatprice_adjusted, order.max=1)
+ar_coefficients <- ar_model$ar
+print(paste("The AR(1) coefficient is ", ar_coefficients[1]))
+```
