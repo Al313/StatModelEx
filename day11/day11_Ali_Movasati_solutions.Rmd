@@ -1,0 +1,180 @@
+---
+title:  
+    "Day9 exercise solutions"
+date: 
+    "Nov. 13th, 2024"
+author:  
+    "Ali Movasati"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
+---
+
+
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+
+```{r load libraries}
+
+
+# load required libraries
+library("skimr")
+library("dplyr")
+library("magrittr")
+library("ggplot2")
+library("survival")
+library("survminer")
+library("fields")
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Problem 1
+
+## 1.A)
+
+```{r}
+
+load("/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/StatModelEx/day11/data/spatialSim.RData")
+
+par(mfrow=c(1,2))
+image.plot(sim1)
+image.plot(sim2)
+
+# summary statistics
+summary(as.vector(sim1))
+summary(as.vector(sim2))
+
+```
+
+## 1.B)
+
+\includepdf[pages=-]{/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/StatModelEx/day11/sketch.pdf}
+
+## 1.C)
+
+```{r}
+
+
+coords <- expand.grid(x1 = 1:100, x2 = 1:100)
+coords$observed <- as.vector(sim1)
+
+lm_model <- lm(observed ~ x1 + x2, data=coords)
+summary(lm_model)
+
+
+```
+
+
+
+## 1.D)
+
+```{r}
+par(mfrow=c(2,2))
+plot(lm_model)
+
+```
+
+### << comments >>
+
+1. Assumption of Independent Errors
+Violation: In spatial data, observations are often spatially correlated; nearby locations tend to have similar values 
+(spatial autocorrelation). This violates the assumption that residuals (errors) are independent of each other.
+
+2. Assumption of Homoscedasticity (Constant Variance of Errors)
+Violation: Spatial data often exhibit heteroscedasticity, where the variability of the residuals changes across 
+the spatial domain. This can occur if different areas have different levels of variability due to local conditions.
+
+3. Assumption of Linearity
+Violation: The relationship between predictors and the response variable might not be strictly linear across space. 
+Spatial data often exhibit complex relationships that vary over the spatial domain, introducing non-linear patterns.
+
+4. Assumption of Normality of Errors
+Violation: The spatial structure or clusters in the data can lead to non-normal error distributions. 
+Clustering or outliers common in spatial data might skew the residuals.
+
+5. Collinearity Among Predictors
+Violation: Spatial predictors (e.g., longitude, latitude, or environmental variables) are often correlated 
+due to spatial patterns or regional influences. This can introduce multicollinearity.
+
+## 1.E)
+
+
+A spatial regression model like kriging or spatial mixed models could be used:
+Z(s) = μ + S(s) + ε
+Where:
+
+Z(s): Spatial process
+μ: Mean trend
+S(s): Spatial random effect
+ε: Independent error term
+
+# Problem 2
+
+## 2.A)
+
+```{r}
+
+
+```
+
+
+## 2.B)
+
+```{r}
+
+
+```
+
+
+## 2.C)
+
+```{r}
+
+
+```
+
+
+## 2.D)
+
+```{r}
+
+
+```
+
+
+## 2.E)
+
+```{r}
+
+
+```
+
+
+## 2.F)
+
+```{r}
+
+
+```
+
+
+## 2.G)
+
+```{r}
+
+
+```
+
