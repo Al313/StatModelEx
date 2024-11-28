@@ -111,6 +111,7 @@ due to spatial patterns or regional influences. This can introduce multicollinea
 
 ## 1.E)
 
+### << comments >>
 
 A spatial regression model like kriging or spatial mixed models could be used:
 Z(s) = μ + S(s) + ε
@@ -127,23 +128,91 @@ S(s): Spatial random effect
 
 ```{r}
 
+transect <- read.table(file = "/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/StatModelEx/day11/data/transect.txt", header = T, sep = " ", stringsAsFactor = F)
 
+
+# Plot the data
+plot(
+  transect$s, transect$Z.s,
+  type = "b",                      # Connect points with lines ("b" = both points and lines)
+  pch = 16,                        # Use filled circles for points
+  col = "blue",                    # Color of points and lines
+  xlim = c(0, 10),                 # Set x-axis range to [0, 10]
+  ylim = range(transect$Z.s),          # Automatically adjust y-axis range
+  xlab = "Location (s)",           # Label for x-axis
+  ylab = "Observation (Z(s))",     # Label for y-axis
+  main = "Spatial Observations Along a Transect"
+)
+
+# Optionally add a grid for better readability
+grid()
 ```
 
 
 ## 2.B)
 
 ```{r}
+# Define the exponential covariance function
+exp.cov <- function(h, theta2, theta3) {
+  theta2 * exp(-h / theta3)
+}
 
+# Parameters
+theta2 <- 5    # Sill
+theta3 <- 2    # Range
+h <- seq(0, 5, length.out = 100)  # Distances from 0 to 5
+
+# Compute covariance values
+cov_values <- exp.cov(h, theta2, theta3)
+
+# Plot
+plot(
+  h, cov_values,
+  type = "l",              # Line plot
+  col = "blue",            # Line color
+  lwd = 2,                 # Line width
+  xlab = "Distance (h)",   # X-axis label
+  ylab = "Covariance",     # Y-axis label
+  main = "Exponential Covariance Function"
+)
+
+# Highlight key parameters
+abline(h = theta2, col = "red", lty = 2)  # Sill (horizontal line)
+abline(v = theta3, col = "green", lty = 2)  # Range (vertical line)
+legend("topright", legend = c("Covariance", "Sill", "Range"),
+       col = c("blue", "red", "green"), lty = c(1, 2, 2), bty = "n")
 
 ```
+
+
+### << comments >>
+
+Sill (θ2=5θ2​=5):
+The red dashed line at 5 corresponds to the sill. It represents the maximum covariance value.
+Range (θ3=2θ3​=2):
+The green dashed line at h=2h=2 indicates the range, the distance at which the covariance drops to approximately θ2⋅e−1≈1.84θ2​⋅e−1≈1.84.
+Nugget (θ1=0θ1​=0):
+Since there’s no nugget effect, the covariance starts at the sill (cov(0)=θ2=5cov(0)=θ2​=5).
 
 
 ## 2.C)
 
 ```{r}
 
+# Function to calculate pairwise Euclidean distances
+dist.matrix <- function(x, y) {
+  # Use outer() to calculate pairwise absolute differences
+  outer(x, y, function(a, b) abs(a - b))
+}
 
+# Locations along the transect
+locations <- c(1, 2, 4, 5, 7)
+
+# Calculate the distance matrix
+DIST.MAT <- dist.matrix(locations, locations)
+
+# Print the distance matrix
+print(DIST.MAT)
 ```
 
 
@@ -152,12 +221,55 @@ S(s): Spatial random effect
 ```{r}
 
 
+# Transect locations
+locations <- c(1, 2, 4, 5, 7)
+
+# Calculate the distance matrix
+DIST.MAT <- dist.matrix(locations, locations)
+
+# Parameters for the covariance function
+theta2 <- 5    # Sill
+theta3 <- 2    # Range
+
+# Calculate the covariance matrix
+SIGMA <- exp.cov(DIST.MAT, theta2, theta3)
+
+# Print the covariance matrix
+print(SIGMA)
+
 ```
 
 
 ## 2.E)
 
 ```{r}
+
+
+# Observed locations
+locations <- c(1, 2, 4, 5, 7)
+
+# New locations where prediction is needed
+snew <- seq(0, 10, length.out = 5) # For example, 5 evenly spaced points between 0 and 10
+
+# Calculate distances between observed points and new locations
+DIST.OBS.NEW <- dist.matrix(locations, snew)
+
+# Parameters for the covariance function
+theta2 <- 5    # Sill
+theta3 <- 2    # Range
+
+# Calculate the covariance matrix sigma
+sigma <- exp.cov(DIST.OBS.NEW, theta2, theta3)
+
+# Print results
+cat("New locations (snew):\n")
+print(snew)
+
+cat("\nDistances between observed locations and snew (DIST.OBS.NEW):\n")
+print(DIST.OBS.NEW)
+
+cat("\nCovariance matrix (sigma):\n")
+print(sigma)
 
 
 ```
@@ -168,6 +280,44 @@ S(s): Spatial random effect
 ```{r}
 
 
+
+# Observed locations and corresponding values
+locations <- c(1, 2, 4, 5, 7)
+Z_obs <- c(-2, 5, 1, -4, 2)  # Observed values of Z at locations s
+
+# New locations where prediction is needed
+snew <- seq(0, 10, length.out = 5) # Example: 5 evenly spaced points between 0 and 10
+
+# Calculate pairwise distances
+DIST.OBS.NEW <- dist.matrix(locations, snew)
+DIST.OBS.OBS <- dist.matrix(locations, locations)
+
+# Parameters for the covariance function
+theta2 <- 5    # Sill
+theta3 <- 2    # Range
+
+# Calculate covariance matrices
+C_OBS_NEW <- exp.cov(DIST.OBS.NEW, theta2, theta3)  # Covariance vector between observed and new
+C_OBS_OBS <- exp.cov(DIST.OBS.OBS, theta2, theta3)  # Covariance matrix for observed locations
+
+# Solve kriging system to calculate weights
+C_OBS_OBS_inv <- solve(C_OBS_OBS)  # Inverse of the covariance matrix for observed points
+weights <- C_OBS_NEW %*% C_OBS_OBS_inv  # Kriging weights
+
+# Kriging prediction for the new locations
+Z_pred <- weights %*% Z_obs  # Predicted values for the new locations
+
+# Plot the observed and predicted values
+plot(locations, Z_obs, col = "blue", pch = 16, cex = 1.5, xlab = "Location", ylab = "Z(s)", 
+     main = "Kriging Prediction for Z(s)")
+
+# Plot the predicted values
+lines(snew, Z_pred, col = "red", lwd = 2)
+
+# Optionally, plot points for predicted locations
+points(snew, Z_pred, col = "red", pch = 17, cex = 1.5)
+
+
 ```
 
 
@@ -176,5 +326,63 @@ S(s): Spatial random effect
 ```{r}
 
 
+# Define parameters for the covariance function
+theta2_values <- c(5, 10, 15)  # Different sill values to compare
+theta3 <- 2                    # Range value
+
+# Generate distances between 0 and 5
+h <- seq(0, 5, length.out = 100)
+
+# Plot the covariance function for different theta2 values
+plot(h, exp.cov(h, theta2_values[1], theta3), type = "l", col = "red", lwd = 2,
+     xlab = "Distance (h)", ylab = "Covariance", 
+     main = "Exponential Covariance Function for Different θ2 Values")
+lines(h, exp.cov(h, theta2_values[2], theta3), col = "blue", lwd = 2)
+lines(h, exp.cov(h, theta2_values[3], theta3), col = "green", lwd = 2)
+legend("topright", legend = paste("θ2 =", theta2_values), col = c("red", "blue", "green"), lwd = 2)
+
+# Observed locations and values
+locations <- c(1, 2, 4, 5, 7)
+Z_obs <- c(-2, 5, 1, -4, 2)
+
+# New prediction locations
+snew <- seq(0, 10, length.out = 5)
+
+
+# Create a plot to store the results
+plot(locations, Z_obs, col = "blue", pch = 16, cex = 1.5, xlab = "Location", ylab = "Z(s)", 
+     main = "Kriging Prediction for Z(s) with Different θ2 Values")
+
+# Loop to calculate and plot results for different theta2 values
+for (theta2 in theta2_values) {
+  
+  # Calculate covariance matrices for the given theta2
+  C_OBS_NEW <- exp.cov(DIST.OBS.NEW, theta2 = theta2, theta3 = theta3)  # Covariance between observed and new
+  C_OBS_OBS <- exp.cov(DIST.OBS.OBS, theta2 = theta2, theta3 = theta3)  # Covariance matrix for observed locations
+
+  # Solve the kriging system
+  C_OBS_OBS_inv <- solve(C_OBS_OBS)  # Inverse of the covariance matrix for observed points
+  weights <- C_OBS_NEW %*% C_OBS_OBS_inv  # Kriging weights
+
+  # Kriging prediction for the new locations
+  Z_pred <- weights %*% Z_obs  # Predicted values for the new locations
+
+  # Plot the predicted values as a line
+  lines(snew, Z_pred, col = ifelse(theta2 == 5, "red", ifelse(theta2 == 10, "green", "purple")), lwd = 2)
+  
+  # Optionally, plot points for predicted locations
+  points(snew, Z_pred, col = ifelse(theta2 == 5, "red", ifelse(theta2 == 10, "green", "purple")), pch = 17, cex = 1.5)
+}
+
+# Add a legend to the plot
+legend("topright", legend = paste("θ2 =", theta2_values), col = c("red", "green", "purple"), lwd = 2)
+
 ```
 
+
+Effect on the covariance function: As θ2θ2​ increases, the covariance between locations increases, 
+implying a stronger spatial correlation.
+
+Effect on kriging predictions: We do not see a difference on kriging predictions. 
+It's likely because the range of the predicted values for different θ2θ2​ values isn't significantly different. 
+This can happen if the locations where the predictions are made (the snew locations) are not very far apart, or if the model's sensitivity to θ2θ2​ is low for the given parameters.
