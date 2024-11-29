@@ -2,9 +2,9 @@
 title:  
     "Day11 exercise solutions"
 date: 
-    "Nov. 19th, 2024"
+    "Nov. 29th, 2024"
 author:  
-    "Ali Movasati"  
+    "Ali Movasati, Isabelle Caroline Rose Cretton, Tristan Koning"  
 output:  
     pdf_document:
         latex_engine: xelatex
@@ -13,14 +13,19 @@ header-includes:
 ---
 
 
-
-
 ```{r global options}
 
 # Set global code chunk options
-knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
 
 ```
+
 
 
 ```{r load libraries}
@@ -63,51 +68,40 @@ summary(as.vector(sim2))
 
 \includepdf[pages=-]{/Users/alimos313/Documents/studies/phd/university/courses/stat-modelling/StatModelEx/day11/sketch.pdf}
 
+
+
 ## 1.C)
 
 ```{r}
+coords <- expand.grid(x1 = 1:nrow(sim1), x2 = 1:ncol(sim1))
+sim1_df <- data.frame(coords, z = as.vector(sim1))
 
+sim1_lm <- lm(z ~ x1 + x2, data = sim1_df)
+summary(sim1_lm)
 
-coords <- expand.grid(x1 = 1:100, x2 = 1:100)
-coords$observed <- as.vector(sim1)
+ggplot(sim1_df, aes(x = x1, y = z)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", col = "red") +
+  labs(title = "Trend of x1 on z", x = "x1", y = "z")
 
-lm_model <- lm(observed ~ x1 + x2, data=coords)
-summary(lm_model)
-
-
+ggplot(sim1_df, aes(x = x2, y = z)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", col = "red") +
+  labs(title = "Trend of x2 on z", x = "x2", y = "z")
 ```
 
-
+There appears to be a trend for both x1 and x2 that the higher these coordinate values go, so does the value of z. This is more pronounced on z. This makes sense as we seem to have a hotspot in the "top right corner" of the plotted image, and lower values in the "bottom left corner".
 
 ## 1.D)
 
 ```{r}
-par(mfrow=c(2,2))
-plot(lm_model)
-
+# Assumptions of the linear model
+plot(sim1_lm)
 ```
 
-### << comments >>
+The residuals vs fitted plot shows a pattern, which indicates that the linear model is not appropriate for this data. The Q-Q plot shows that the residuals are not normally distributed, as they deviate quite a bit. The scale-location plot shows that the residuals are homoscedastic, as there is no clear structure visible. The residuals vs leverage plot shows that there arent any high leverage points.
 
-1. Assumption of Independent Errors
-Violation: In spatial data, observations are often spatially correlated; nearby locations tend to have similar values 
-(spatial autocorrelation). This violates the assumption that residuals (errors) are independent of each other.
 
-2. Assumption of Homoscedasticity (Constant Variance of Errors)
-Violation: Spatial data often exhibit heteroscedasticity, where the variability of the residuals changes across 
-the spatial domain. This can occur if different areas have different levels of variability due to local conditions.
-
-3. Assumption of Linearity
-Violation: The relationship between predictors and the response variable might not be strictly linear across space. 
-Spatial data often exhibit complex relationships that vary over the spatial domain, introducing non-linear patterns.
-
-4. Assumption of Normality of Errors
-Violation: The spatial structure or clusters in the data can lead to non-normal error distributions. 
-Clustering or outliers common in spatial data might skew the residuals.
-
-5. Collinearity Among Predictors
-Violation: Spatial predictors (e.g., longitude, latitude, or environmental variables) are often correlated 
-due to spatial patterns or regional influences. This can introduce multicollinearity.
 
 ## 1.E)
 
@@ -121,6 +115,9 @@ Z(s): Spatial process
 μ: Mean trend
 S(s): Spatial random effect
 ε: Independent error term
+
+
+
 
 # Problem 2
 
@@ -148,6 +145,15 @@ plot(
 grid()
 ```
 
+```{r}
+
+skim(transect)
+head(transect)
+
+
+```
+
+\newpage
 
 ## 2.B)
 
