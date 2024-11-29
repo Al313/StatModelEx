@@ -1,0 +1,191 @@
+---
+title:  
+    "Day11 exercise solutions"
+date: 
+    "Nov. 15th, 2024"
+author:  
+    "Ali Movasati, Isabelle Caroline Rose Cretton, Tristan Koning"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
+---
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+
+```
+
+
+```{r libraries}
+
+
+# load required libraries
+library("fields")
+library("skimr")
+library("dplyr")
+library("magrittr")
+library("ggplot2")
+library("survival")
+library("survminer")
+library("gridExtra")
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Problem 1
+
+## (a)
+
+```{r}
+# Load day11/data/spatialSim.RData
+load.RData("data/spatialSim.RData")
+
+# Plot the data
+image.plot(sim1, main = "Sim1")
+image.plot(sim2, main = "Sim2")
+
+summary(as.vector(sim1))
+summary(as.vector(sim2))
+```
+
+Looking at the plot, sim2 seems to be some sort of noise component, which varies more strongly than sim1 (values from -3.8 to 3.6). Sim1 seems to be more structured.
+
+## (c)
+
+```{r}
+coords <- expand.grid(x1 = 1:nrow(sim1), x2 = 1:ncol(sim1))
+sim1_df <- data.frame(coords, z = as.vector(sim1))
+
+sim1_lm <- lm(z ~ x1 + x2, data = sim1_df)
+summary(sim1_lm)
+
+ggplot(sim1_df, aes(x = x1, y = z)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", col = "red") +
+  labs(title = "Trend of x1 on z", x = "x1", y = "z")
+
+ggplot(sim1_df, aes(x = x2, y = z)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", col = "red") +
+  labs(title = "Trend of x2 on z", x = "x2", y = "z")
+```
+
+There appears to be a trend for both x1 and x2 that the higher these coordinate values go, so does the value of z. This is more pronounced on z. This makes sense as we seem to have a hotspot in the "top right corner" of the plotted image, and lower values in the "bottom left corner".
+
+## (d)
+
+```{r}
+# Assumptions of the linear model
+plot(sim1_lm)
+```
+
+The residuals vs fitted plot shows a pattern, which indicates that the linear model is not appropriate for this data. The Q-Q plot shows that the residuals are not normally distributed, as they deviate quite a bit. The scale-location plot shows that the residuals are homoscedastic, as there is no clear structure visible. The residuals vs leverage plot shows that there arent any high leverage points.
+
+## (e)
+
+We could eprform additive decomposition: $z = \mu + Z(s) + \epsilon$, where $\mu$ is the mean, Z(s) is a stationary process, and $\epsilon$ is the error term.
+
+```{r}
+mu <- mean(sim1_df$z)
+```
+
+The mean is `r mu`.
+
+
+# Problem 2
+
+## (a)
+
+```{r}
+transect <- read.csv("day11/data/transect.txt", header = TRUE, sep = " ")
+skim(transect)
+head(transect)
+
+ggplot(transect, aes(x = s, y = Z.s)) +
+  geom_point() +
+  labs(title = "Transect data", x = "s", y = "Z.s")
+```
+
+## (b)
+
+```{r}
+exp.cov <- function(h, theta2, theta3) {
+    return(theta2 * exp(-h / theta3))
+}
+
+h <- seq(0, 5, length.out = 100)
+theta1 <- 0
+theta2 <- 5
+theta3 <- 2
+
+# Calculate covariance values
+cov_vals <- numeric(length(h))
+for (i in 1:length(h)) {
+    cov_vals[i] <- exp.cov(h[i], theta2, theta3)
+}
+
+ggplot(data.frame(h = h, cov = cov_vals), aes(x = h, y = cov)) +
+  geom_line() +
+  labs(title = "Exponential covariance function", x = "h", y = "Covariance") +
+  theme_minimal()
+```
+
+Nugget = `r theta1`, Partial sill = `r theta2`, Range = `r theta3`.
+
+## (c)
+
+```{r}
+dist.matrix <- function(x, y) {
+    return(abs(outer(x, y, "-")))
+}
+
+DIST.MAT <- dist.matrix(transect$s, transect$s)
+DIST.MAT
+```
+
+## (d)
+
+```{r}
+SIGMA <- exp.cov(DIST.MAT, theta2, theta3)
+SIGMA
+```
+
+## (e)
+
+```{r}
+snew <- seq(min(transect$s), max(transect$s), length.out = 10)
+
+dist.new <- dist.matrix(snew, transect$s)
+sigma.new <- matrix(0, nrow = length(snew), ncol = length(transect$s))
+for (i in 1:length(snew)) {
+    for (j in 1:length(transect$s)) {
+        sigma.new[i, j] <- exp.cov(dist.new[i, j], theta2, theta3)
+    }
+}
+
+dist.new
+sigma.new
+```
+
+## (f)
+
+```{r}
+# Inverse of sigma
+sigma.inv <- solve(sigma.new)
+
+lambda <- sigma.inv * (sigma.new + 1 * (1 - 1 * sigma.inv * sigma.new) / (1 * sigma.inv * 1))
+```
