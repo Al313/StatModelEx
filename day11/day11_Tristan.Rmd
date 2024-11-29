@@ -138,9 +138,17 @@ for (i in 1:length(h)) {
     cov_vals[i] <- exp.cov(h[i], theta2, theta3)
 }
 
+sill_line <- data.frame(h = c(0, max(h)), cov = theta2, label = "Sill")
+range_line <- data.frame(h = theta3, cov = c(0, theta2), label = "Range")
+
 ggplot(data.frame(h = h, cov = cov_vals), aes(x = h, y = cov)) +
-  geom_line() +
-  labs(title = "Exponential covariance function", x = "h", y = "Covariance") +
+  geom_line(color = "blue") +
+  geom_line(data = range_line, aes(x = h, y = cov, color = label), linetype = "dashed") +
+  geom_line(data = sill_line, aes(x = h, y = cov, color = label), linetype = "dashed") +
+  scale_color_manual(values = c("Sill" = "red", "Range" = "green")) +
+  labs(title = "Exponential covariance function", 
+        x = "Distance (h)", 
+        y = "Covariance") +
   theme_minimal()
 ```
 
@@ -184,7 +192,7 @@ sigma.new
 ## (f)
 
 ```{r}
-snew <- seq(min(transect$s), max(transect$s), length.out = 100)
+snew <- seq(min(transect$s), max(transect$s), length.out = 5)
 
 DIST.OBS.PRED <- dist.matrix(transect$s, snew)
 DIST.OBS.OBS <- dist.matrix(transect$s, transect$s)
@@ -192,6 +200,8 @@ DIST.OBS.OBS <- dist.matrix(transect$s, transect$s)
 COV.OBS.PRED <- exp.cov(DIST.OBS.PRED, theta2, theta3)
 COV.OBS.OBS <- exp.cov(DIST.OBS.OBS, theta2, theta3)
 
-#COV.OBS.PRED.INV <- solve(COV.OBS.PRED)
-#COV.OBS.OBS.INV <- solve(COV.OBS.OBS)
+COV.OBS.PRED.INV <- solve(COV.OBS.PRED)
+COV.OBS.OBS.INV <- solve(COV.OBS.OBS)
+
+
 ```
