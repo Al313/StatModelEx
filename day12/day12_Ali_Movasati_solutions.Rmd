@@ -1,0 +1,197 @@
+---
+title:  
+    "Day12 exercise solutions"
+date: 
+    "Dec. 2nd, 2024"
+author:  
+    "Ali Movasati"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
+---
+
+
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+
+```{r load libraries}
+
+
+# load required libraries
+library("extremefit")
+library("skimr")
+library("dplyr")
+library("magrittr")
+library("ggplot2")
+library("lubridate")
+
+
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+\newpage
+
+# Problem 1
+
+
+```{r}
+
+# Load the data
+
+data(dataWind)
+dataWind$Date <- make_date(year = dataWind$Year, month = dataWind$Month, day = dataWind$Day)
+
+
+```
+
+
+## 1.A)
+
+
+
+```{r}
+
+# Stat summary EDA
+
+head(dataWind)
+
+skim(dataWind)
+
+summary(dataWind)
+
+```
+
+\newpage
+
+```{r}
+
+# Visual EDA
+
+## histogram of wind speed
+
+hist_fig <- 
+    dataWind %>% 
+        ggplot(aes(x = Speed)) + 
+        geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+        labs(title = "Distribution of Daily Average Wind Speeds",
+            x = "Wind Speed",
+            y = "Frequency") + 
+        theme_bw() +
+        theme(plot.title = element_text(size = 30, hjust = 0.5),
+            axis.title = element_text(size = 25),
+            axis.text.x = element_text(size = 20, angle = 90),
+            axis.text.y = element_text(size = 20))
+
+hist_fig
+
+box_fig <- 
+    dataWind %>% 
+        ggplot(aes(y = Speed)) + 
+        geom_boxplot(fill = "blue", color = "black") +
+        labs(title = "Boxplot of Daily Average Wind Speeds",
+            y = "Wind Speed") + 
+        theme_bw() + 
+        theme(plot.title = element_text(size = 30, hjust = 0.5),
+            axis.title = element_text(size = 25),
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_text(size = 20))
+
+box_fig
+
+
+point_fig <- 
+    dataWind %>%
+    ggplot(aes(x = Date, y = Speed)) +
+    geom_point() +
+    labs(title = "Daily Average Wind Speeds Over Time",
+        x = "Date",
+        y = "Wind Speed") +
+        theme_bw() + 
+        theme(plot.title = element_text(size = 30, hjust = 0.5),
+            axis.title = element_text(size = 25),
+            axis.text.x = element_text(size = 20, angle = 90),
+            axis.text.y = element_text(size = 20))
+
+point_fig
+
+yearly_fig <- 
+    dataWind %>%
+    ggplot(aes(x = factor(Year), y = Speed)) +
+    geom_boxplot() +
+    labs(title = "Daily Average Wind Speeds Over Time",
+        x = "Date",
+        y = "Wind Speed") +
+        theme_bw() + 
+        theme(plot.title = element_text(size = 30, hjust = 0.5),
+            axis.title = element_text(size = 25),
+            axis.text.x = element_text(size = 20, angle = 90),
+            axis.text.y = element_text(size = 20))
+
+yearly_fig
+
+
+seasonality_fig <- 
+    dataWind %>%
+    ggplot(aes(x = factor(Month), y = Speed)) +
+    geom_boxplot() +
+    labs(title = "Daily Average Wind Speeds Over Time",
+        x = "Date",
+        y = "Wind Speed") +
+        theme_bw() + 
+        theme(plot.title = element_text(size = 30, hjust = 0.5),
+            axis.title = element_text(size = 25),
+            axis.text.x = element_text(size = 20, angle = 90),
+            axis.text.y = element_text(size = 20))
+
+seasonality_fig
+
+
+
+
+
+```
+
+## 1.B)
+
+
+```{r}
+
+# Prepare data
+monthly_max <- 
+    dataWind %>% 
+        select(Year, Month, Speed) %>% 
+        group_by(Year, Month) %>% 
+        summarize(max_speed = max(Speed, na.rm = T)) %>% 
+        mutate(Date = make_date(year = Year, month = Month))
+
+# plot
+monthly_max_fig <- 
+    monthly_max %>% 
+    ggplot(aes(x= Date, y = max_speed)) + 
+    geom_line() +
+    labs(title = "Maximum Monthly Wind Speed",
+    x = "Date",
+    y = "Max. Speed per Month") +
+    theme_bw() + 
+        theme(plot.title = element_text(size = 30, hjust = 0.5),
+            axis.title = element_text(size = 25),
+            axis.text.x = element_text(size = 20, angle = 90),
+            axis.text.y = element_text(size = 20))
+
+monthly_max_fig
+
+```
