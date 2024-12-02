@@ -28,8 +28,11 @@ knitr::opts_chunk$set(warning = FALSE)
 
 # load required libraries
 library("extremefit")
+library("extRemes")
+library("ismev")
 library("skimr")
 library("dplyr")
+library("tidyr")
 library("magrittr")
 library("ggplot2")
 library("lubridate")
@@ -74,7 +77,7 @@ summary(dataWind)
 
 ```
 
-\newpage
+
 
 ```{r}
 
@@ -90,10 +93,10 @@ hist_fig <-
             x = "Wind Speed",
             y = "Frequency") + 
         theme_bw() +
-        theme(plot.title = element_text(size = 30, hjust = 0.5),
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
             axis.title = element_text(size = 25),
-            axis.text.x = element_text(size = 20, angle = 90),
-            axis.text.y = element_text(size = 20))
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
 
 hist_fig
 
@@ -104,11 +107,11 @@ box_fig <-
         labs(title = "Boxplot of Daily Average Wind Speeds",
             y = "Wind Speed") + 
         theme_bw() + 
-        theme(plot.title = element_text(size = 30, hjust = 0.5),
-            axis.title = element_text(size = 25),
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
             axis.text.x = element_blank(),
             axis.ticks.x = element_blank(),
-            axis.text.y = element_text(size = 20))
+            axis.text.y = element_text(size = 15))
 
 box_fig
 
@@ -121,10 +124,10 @@ point_fig <-
         x = "Date",
         y = "Wind Speed") +
         theme_bw() + 
-        theme(plot.title = element_text(size = 30, hjust = 0.5),
-            axis.title = element_text(size = 25),
-            axis.text.x = element_text(size = 20, angle = 90),
-            axis.text.y = element_text(size = 20))
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
 
 point_fig
 
@@ -136,10 +139,10 @@ yearly_fig <-
         x = "Date",
         y = "Wind Speed") +
         theme_bw() + 
-        theme(plot.title = element_text(size = 30, hjust = 0.5),
-            axis.title = element_text(size = 25),
-            axis.text.x = element_text(size = 20, angle = 90),
-            axis.text.y = element_text(size = 20))
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
 
 yearly_fig
 
@@ -152,10 +155,10 @@ seasonality_fig <-
         x = "Date",
         y = "Wind Speed") +
         theme_bw() + 
-        theme(plot.title = element_text(size = 30, hjust = 0.5),
-            axis.title = element_text(size = 25),
-            axis.text.x = element_text(size = 20, angle = 90),
-            axis.text.y = element_text(size = 20))
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
 
 seasonality_fig
 
@@ -187,11 +190,91 @@ monthly_max_fig <-
     x = "Date",
     y = "Max. Speed per Month") +
     theme_bw() + 
-        theme(plot.title = element_text(size = 30, hjust = 0.5),
-            axis.title = element_text(size = 25),
-            axis.text.x = element_text(size = 20, angle = 90),
-            axis.text.y = element_text(size = 20))
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
 
 monthly_max_fig
 
+```
+
+
+## 1.C)
+
+```{r}
+?fevd
+
+gev_fit <- fevd(monthly_max$max_speed)
+
+summary(gev_fit)
+ci(gev_fit, type = "parameter")
+```
+
+## 1.D)
+
+
+```{r}
+
+par(mfrow=c(1,3))
+plot(gev_fit, type = "density", main = "")
+plot(gev_fit, type = "qq", main = "")
+plot(gev_fit, type = "prob", main = "")
+
+```
+
+## 1.E)
+
+```{r}
+
+## choose a threshold
+
+mrl.plot(dataWind$Speed[!is.na(dataWind$Speed)])
+
+```
+
+### << comments >>
+
+Based on the mean residual life, the range of thresholds that are somewhat stable (linear) is
+from 18 to 22. We take 20 as threshold.
+
+```{r}
+
+# Fit a GPD model
+
+gpd_fit <- fevd(dataWind$Speed[!is.na(dataWind$Speed)], threshold = 20, type = "GP", time.units="days")
+
+summary(gpd_fit)
+ci(gpd_fit, type = "parameter")
+```
+
+## 1.F)
+
+```{r}
+
+df <- data.frame()
+
+for (i in 2:100){
+    df <- rbind(df, c(i, as.numeric(ci(gev_fit, type = "return.level", return.period = i)[2]), as.numeric(ci(gpd_fit, type = "return.level", return.period = i)[2])))
+}
+
+df %<>% setNames(c("Year", "GEV_est", "GPD_est")) %>% pivot_longer(cols = c(GEV_est, GPD_est), names_to = "Method", values_to = "Estimates")
+
+
+return_fig <- 
+    df %>%
+        ggplot(aes(x = Year, y = Estimates, color = Method)) +
+        geom_line() +
+        labs(title = "Return Levels for Each Model",
+        x = "Year",
+        y = "Estimate",
+        color = "Model") +
+        theme_bw() + 
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
+
+
+return_fig
 ```
