@@ -1,0 +1,101 @@
+---
+title:  
+    "Day12 exercise solutions"
+date: 
+    "Nov. 15th, 2024"
+author:  
+    "Ali Movasati, Isabelle Caroline Rose Cretton, Tristan Koning"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
+---
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+
+```
+
+
+```{r libraries}
+
+
+# load required libraries
+library("skimr")
+library("extremefit")
+library("extRemes")
+
+`%notin%` <- Negate(`%in%`)
+```
+
+# Problem 1
+
+## (a)
+```{r 1a load data}
+data("dataWind")
+str(dataWind)
+head(dataWind)
+```
+
+\pagebreak
+```{r 1a EDA}
+skimr::skim(dataWind)
+
+
+# Plot wind speed vs day
+pairs(dataWind)
+plot(dataWind$Speed, xlab="Day", ylab="Wind Speed (m/s)", main="Wind Speed vs. Time")
+
+plot(Speed~Month, xlab="Month", ylab="Wind Speed (m/s)", main="Median Wind Speed per Month", data=dataWind)
+# TODO: Check why line only showing from 4:8
+lines(1:12, c(by(dataWind$Speed, dataWind$Month, median)), col=2, lwd=2)
+```
+
+```{r 1b Maximum Wind Speed}
+max_monthly <- aggregate(Speed~Month, data=dataWind, max)
+
+plot(x=max_monthly$Month, y=max_monthly$Speed, 
+     xlab="Month", 
+     ylab="Max Wind Speed (m/s)", 
+     main="Maximum Wind Speed per Month (m/s)",
+     pch=16,
+     type="b",
+     col="blue")
+```
+
+```{r 1c GEV-Analysis}
+gev <- fevd(max_monthly$Month)
+summary(gev)
+ci(gev, type="parameter")
+```
+
+```{r 1d Fit Analysis}
+plot(gev, type="qq", main="GEV-Fit QQ-Plot")
+plot(gev, type="prob", main="GEV-Fit PP-Plot")
+```
+
+Looking at both the QQ- and PP-Plot, it is safe to assume that the model we have created is not suited for the real data, as in both plots we can observe quite large deviations.
+
+```{r 1e Peaks over Thresholds}
+gpd <- fevd(na.omit(dataWind$Speed), threshold=20, type="GP", time.units="months")
+summary(gpd)
+ci(gpd, type="parameter")
+```
+
+```{r 1f Return Levels}
+#GEV
+ci(gev, type="return.level", return.period=20)
+
+#GPD
+ci(gpd, type="return.level", return.period=20)
+```
