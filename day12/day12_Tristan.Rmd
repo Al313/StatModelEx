@@ -56,9 +56,9 @@ skimr::skim(dataWind)
 pairs(dataWind)
 plot(dataWind$Speed, xlab="Day", ylab="Wind Speed (m/s)", main="Wind Speed vs. Time")
 
+monthly_med <- aggregate(Speed~Month, data=dataWind, median)
 plot(Speed~Month, xlab="Month", ylab="Wind Speed (m/s)", main="Median Wind Speed per Month", data=dataWind)
-# TODO: Check why line only showing from 4:8
-lines(1:12, c(by(dataWind$Speed, dataWind$Month, median)), col=2, lwd=2)
+lines(monthly_med$Month, monthly_med$Speed, col="red", lwd=2)
 ```
 
 ```{r 1b Maximum Wind Speed}
