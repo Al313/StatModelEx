@@ -1,0 +1,234 @@
+---
+title:  
+    "Day12 exercise solutions"
+date: 
+    "Dec. 06th, 2024"
+author:  
+    "Ali Movasati, Isabelle Caroline Rose Cretton, Tristan Koning"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
+---
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+```{r load libraries}
+
+
+# load required libraries
+library("extremefit")
+library("extRemes")
+library("ismev")
+library("skimr")
+library("dplyr")
+library("tidyr")
+library("magrittr")
+library("ggplot2")
+library("lubridate")
+
+
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Exercise 1
+
+## (a)
+
+```{r 1a load data}
+data("dataWind")
+dataWind$Date <- make_date(year = dataWind$Year, month = dataWind$Month, day = dataWind$Day)
+str(dataWind)
+head(dataWind)
+```
+
+
+\pagebreak
+```{r 1a EDA}
+skimr::skim(dataWind)
+
+
+# Plot wind speed vs day
+pairs(dataWind)
+plot(dataWind$Speed, xlab="Day", ylab="Wind Speed (m/s)", main="Wind Speed vs. Time")
+
+monthly_med <- aggregate(Speed~Month, data=dataWind, median)
+plot(Speed~Month, xlab="Month", ylab="Wind Speed (m/s)", main="Median Wind Speed per Month", data=dataWind)
+lines(monthly_med$Month, monthly_med$Speed, col="red", lwd=2)
+
+hist_fig <- 
+    dataWind %>% 
+        ggplot(aes(x = Speed)) + 
+        geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+        labs(title = "Distribution of Daily Average Wind Speeds",
+            x = "Wind Speed",
+            y = "Frequency") + 
+        theme_bw() +
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 25),
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
+
+hist_fig
+
+box_fig <- 
+    dataWind %>% 
+        ggplot(aes(y = Speed)) + 
+        geom_boxplot(fill = "blue", color = "black") +
+        labs(title = "Boxplot of Daily Average Wind Speeds",
+            y = "Wind Speed") + 
+        theme_bw() + 
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_text(size = 15))
+
+box_fig
+
+yearly_fig <- 
+    dataWind %>%
+    ggplot(aes(x = factor(Year), y = Speed)) +
+    geom_boxplot() +
+    labs(title = "Daily Average Wind Speeds Over Time",
+        x = "Date",
+        y = "Wind Speed") +
+        theme_bw() + 
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
+
+yearly_fig
+
+seasonality_fig <- 
+    dataWind %>%
+    ggplot(aes(x = factor(Month), y = Speed)) +
+    geom_boxplot() +
+    labs(title = "Daily Average Wind Speeds Over Time",
+        x = "Date",
+        y = "Wind Speed") +
+        theme_bw() + 
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
+
+seasonality_fig
+```
+
+## (b)
+
+```{r}
+
+# Prepare data
+monthly_max <- 
+    dataWind %>% 
+        select(Year, Month, Speed) %>% 
+        group_by(Year, Month) %>% 
+        summarize(max_speed = max(Speed, na.rm = T)) %>% 
+        mutate(Date = make_date(year = Year, month = Month))
+
+# plot
+monthly_max_fig <- 
+    monthly_max %>% 
+    ggplot(aes(x= Date, y = max_speed)) + 
+    geom_line() +
+    labs(title = "Maximum Monthly Wind Speed",
+    x = "Date",
+    y = "Max. Speed per Month") +
+    theme_bw() + 
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
+
+monthly_max_fig
+
+```
+
+## (c)
+
+```{r}
+gev_fit <- fevd(monthly_max$max_speed)
+
+summary(gev_fit)
+ci(gev_fit, type = "parameter")
+```
+
+## (d)
+
+```{r}
+
+par(mfrow=c(1,3))
+plot(gev_fit, type = "density", main = "")
+plot(gev_fit, type = "qq", main = "")
+plot(gev_fit, type = "prob", main = "")
+
+```
+
+## (e)
+
+```{r}
+
+## choose a threshold
+
+mrl.plot(dataWind$Speed[!is.na(dataWind$Speed)])
+
+```
+
+### << comments >>
+
+Based on the mean residual life, the range of thresholds that are somewhat stable (linear) is
+from 18 to 22. We take 20 as threshold.
+
+```{r}
+
+# Fit a GPD model
+
+gpd_fit <- fevd(dataWind$Speed[!is.na(dataWind$Speed)], threshold = 20, type = "GP", time.units="days")
+
+summary(gpd_fit)
+ci(gpd_fit, type = "parameter")
+```
+
+## (f)
+
+```{r}
+
+df <- data.frame()
+
+for (i in 2:100){
+    df <- rbind(df, c(i, as.numeric(ci(gev_fit, type = "return.level", return.period = i)[2]), as.numeric(ci(gpd_fit, type = "return.level", return.period = i)[2])))
+}
+
+df %<>% setNames(c("Year", "GEV_est", "GPD_est")) %>% pivot_longer(cols = c(GEV_est, GPD_est), names_to = "Method", values_to = "Estimates")
+
+
+return_fig <- 
+    df %>%
+        ggplot(aes(x = Year, y = Estimates, color = Method)) +
+        geom_line() +
+        labs(title = "Return Levels for Each Model",
+        x = "Year",
+        y = "Estimate",
+        color = "Model") +
+        theme_bw() + 
+        theme(plot.title = element_text(size = 20, hjust = 0.5),
+            axis.title = element_text(size = 20),
+            axis.text.x = element_text(size = 15, angle = 90),
+            axis.text.y = element_text(size = 15))
+
+
+return_fig
+```
