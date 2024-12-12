@@ -1,0 +1,148 @@
+---
+title:  
+    "Day13 exercise solutions"
+date: 
+    "Dec. 12nd, 2024"
+author:  
+    "Ali Movasati"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
+---
+
+
+
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+
+```{r load libraries}
+
+library(tidyverse)
+library(nnet)
+library(neuralnet)
+library(keras)
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+\newpage
+
+# Problem 1
+
+```{r}
+# Load iris dataset
+data(iris)
+
+
+# Subset data for versicolor and virginica
+iris_subset <- iris %>%
+  filter(Species %in% c("versicolor", "virginica")) %>%
+  mutate(Species = factor(Species))
+```
+
+## 1.a
+
+```{r Logistic GLM Classifier}
+
+
+# Prepare binary classification
+iris_subset$is_virginica <- as.numeric(iris_subset$Species == "virginica")
+
+# Logistic GLM model
+glm_model <- glm(is_virginica ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, 
+                 data = iris_subset, 
+                 family = binomial())
+
+# Model summary
+summary(glm_model)
+
+```
+
+
+## 1.b
+
+```{r Perceptron with Logistic Activation}
+
+
+# Prepare data for neural network
+X <- as.matrix(iris_subset[, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")])
+y <- iris_subset$is_virginica
+
+# Perceptron with logistic activation
+perceptron_model <- neuralnet::neuralnet(is_virginica ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, 
+                                          data = iris_subset, 
+                                          hidden = 1, 
+                                          act.fct = "logistic",
+                                          linear.output = FALSE)
+
+# Compare predictions
+glm_pred <- predict(glm_model, type = "response")
+perceptron_pred <- perceptron_model$net.result[[1]]
+
+# Confusion matrices
+glm_confusion <- table(Actual = iris_subset$is_virginica, 
+                       Predicted = ifelse(glm_pred > 0.5, 1, 0))
+perceptron_confusion <- table(Actual = iris_subset$is_virginica, 
+                              Predicted = ifelse(perceptron_pred > 0.5, 1, 0))
+
+print("GLM Confusion Matrix:")
+print(glm_confusion)
+print("Perceptron Confusion Matrix:")
+print(perceptron_confusion)
+
+```
+
+
+## 1.c
+
+```{r Deep Neural Network with Overfitting Illustration}
+
+
+
+```
+
+
+
+# Problem 2
+
+
+
+```{r}
+
+```
+
+
+
+
+# Problem 3
+
+
+## 3.a
+
+```{r}
+
+```
+
+
+## 3.b
+
+```{r}
+
+```
+
+
+## 3.c
+
+```{r}
+
+```
