@@ -1,0 +1,418 @@
+---
+title:  
+    "Day12 exercise solutions"
+date: 
+    "Dec. 06th, 2024"
+author:  
+    "Ali Movasati, Isabelle Caroline Rose Cretton, Tristan Koning"  
+output:  
+    pdf_document:
+        latex_engine: xelatex
+header-includes:
+  - \usepackage{pdfpages}
+---
+
+```{r global options}
+
+# Set global code chunk options
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+
+```{r load libraries}
+
+
+# load required libraries
+library("extremefit")
+library("extRemes")
+library("ismev")
+library("skimr")
+library("dplyr")
+library("tidyr")
+library("magrittr")
+library("ggplot2")
+library("lubridate")
+library("fields")
+library("keras3")
+library("nnet")
+
+
+# define functions
+`%notin%` <- Negate(`%in%`)
+
+
+```
+
+# Exercise 1
+
+## (a)
+
+```{r}
+data("iris")
+head(iris)
+str(iris)
+
+iris_subset <- subset(iris, Species %in% c("versicolor", "virginica"))
+iris_subset$Species <- as.numeric(iris_subset$Species) - 2  # Convert to binary (0 and 1)
+glm_model <- glm(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, data = iris_subset, family = binomial)
+summary(glm_model)
+```
+
+## (b)
+
+```{r}
+perceptron_model <- nnet(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, 
+                        data = iris_subset, 
+                        act.fct = "logistic",
+                        size = 1, 
+                        linout = FALSE)
+
+summary(perceptron_model)
+
+perceptron_weights <- perceptron_model$wts
+glm_weights <- coef(glm_model)
+glm_weights
+perceptron_weights
+
+# TODO: compare weights
+```
+
+## (c)
+
+```{r}
+reticulate::py_install("keras")
+reticulate::py_install("tensorflow")
+
+# Training and testing sets
+set.seed(123)
+train_indices <- sample(1:nrow(iris_subset), 0.7*nrow(iris_subset))
+train_data <- iris_subset[train_indices,]
+test_data <- iris_subset[-train_indices,]
+
+# Model
+dnn_model <- keras_model_sequential() %>%
+  layer_dense(units = 64, activation = "relu", input_shape = 4) %>%
+  layer_dense(units = 64, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+dnn_model %>% compile(
+    optimizer = 'adam',
+    loss = 'binary_crossentropy',
+    metrics = c('accuracy')
+)
+
+# Train
+history <- dnn_model %>% fit(
+    as.matrix(train_data[, -5]), train_data$Species,
+    epochs = 100,
+    batch_size = 10,
+    validation_split = 0.2
+)
+
+# Evaluate
+plot(history)
+score <- dnn_model %>% evaluate(as.matrix(test_data[, -5]), test_data$Species)
+cat("Test accuracy:", score$accuracy, "\n")
+
+# Extract loss and accuracy from the history object
+train_loss <- history$metrics$loss
+val_loss <- history$metrics$val_loss
+train_acc <- history$metrics$accuracy
+val_acc <- history$metrics$val_accuracy
+
+# Create a data frame for plotting
+epochs <- 1:100
+loss_data <- data.frame(
+  Epoch = epochs,
+  Train_Loss = train_loss,
+  Val_Loss = val_loss,
+  Train_Accuracy = train_acc,
+  Val_Accuracy = val_acc
+)
+
+# Plot training and validation loss
+ggplot(loss_data, aes(x = Epoch)) +
+  geom_line(aes(y = Train_Loss, color = "Train Loss")) +
+  geom_line(aes(y = Val_Loss, color = "Validation Loss")) +
+  labs(title = "Training and Validation Loss", y = "Loss") +
+  theme_minimal()
+
+# Plot training and validation accuracy
+ggplot(loss_data, aes(x = Epoch)) +
+  geom_line(aes(y = Train_Accuracy, color = "Train Accuracy")) +
+  geom_line(aes(y = Val_Accuracy, color = "Validation Accuracy")) +
+  labs(title = "Training and Validation Accuracy", y = "Accuracy") +
+  theme_minimal()
+
+plot(history)
+```
+
+# Exercise 2
+
+## (a)
+
+```{r}
+
+```
+
+# Exercise 3
+
+## (a)
+
+```{r}
+cifar10full <- dataset_cifar10() # See ?dataset_cifar10 for more info
+sela <- (cifar10full$train$y < 6)
+# select only first six categories
+selb <- (cifar10full$test$y < 6)
+cifar10 <- list(train=list(x=cifar10full$train$x[sela,,,],
+                           y=cifar10full$train$y[sela]), 
+                test=list(x=cifar10full$test$x[selb,,,],
+                          y=cifar10full$test$y[selb]))
+# Scale RGB values in test and train inputs:
+x_train <- cifar10$train$x / 255
+x_test <- cifar10$test$x / 255
+y_train <- to_categorical(cifar10$train$y, num_classes = 6)
+y_test <- to_categorical(cifar10$test$y, num_classes = 6)
+
+# Transform (manually) to grayscale
+x_train2 <- 0.3 * x_train[,,,1] + 0.59 * x_train[,,,2] + 0.11 * x_train[,,,3]
+x_test2 <- 0.3 * x_test[,,,1] + 0.59 * x_test[,,,2] + 0.11 * x_test[,,,3]
+x_train2 <- x_train2[,2:31,2:31] # omit a one pixel border
+x_test2 <- x_test2[,2:31,2:31]
+dim(x_train2) <- c(dim(x_train2), 1) # Fitting requires 4-dimensional array
+dim(x_test2) <- c(dim(x_test2), 1)
+rm(x_train, x_test, cifar10, cifar10full) # not needed anymore
+
+# Define a function to create the model with a specified dropout rate
+create_model <- function(dropout_rate) {
+  model <- keras_model_sequential() %>%
+    layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", input_shape = c(30, 30, 1)) %>%
+    layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+    layer_dropout(rate = dropout_rate) %>%
+    layer_conv_2d(filters = 64, kernel_size = c(3, 3), activation = "relu") %>%
+    layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+    layer_dropout(rate = dropout_rate) %>%
+    layer_flatten() %>%
+    layer_dense(units = 128, activation = "relu") %>%
+    layer_dropout(rate = dropout_rate) %>%
+    layer_dense(units = 6) %>%
+    layer_activation("softmax")
+  
+  model %>% compile(
+    loss = "categorical_crossentropy",
+    optimizer = optimizer_adam(),
+    metrics = c("accuracy")
+  )
+  
+  return(model)
+}
+
+# Train and evaluate the baseline model
+baseline_model <- create_model(dropout_rate = 0.25)
+baseline_history <- baseline_model %>% fit(
+  x_train2, y_train,
+  epochs = 2,
+  batch_size = 64,
+  validation_data = list(x_test2, y_test)
+)
+baseline_score <- baseline_model %>% evaluate(x_test2, y_test)
+
+# Train and evaluate the model with increased dropout rate
+increased_dropout_model <- create_model(dropout_rate = 0.5)
+increased_dropout_history <- increased_dropout_model %>% fit(
+  x_train2, y_train,
+  epochs = 2,
+  batch_size = 64,
+  validation_data = list(x_test2, y_test)
+)
+increased_dropout_score <- increased_dropout_model %>% evaluate(x_test2, y_test)
+
+# Train and evaluate the model with decreased dropout rate
+decreased_dropout_model <- create_model(dropout_rate = 0.1)
+decreased_dropout_history <- decreased_dropout_model %>% fit(
+  x_train2, y_train,
+  epochs = 2,
+  batch_size = 64,
+  validation_data = list(x_test2, y_test)
+)
+decreased_dropout_score <- decreased_dropout_model %>% evaluate(x_test2, y_test)
+
+# Compare the results
+results <- data.frame(
+  Model = c("Baseline", "Increased Dropout", "Decreased Dropout"),
+  Accuracy = c(baseline_score$accuracy, increased_dropout_score$accuracy, decreased_dropout_score$accuracy)
+)
+print(results)
+```
+
+With increased dropout rate, we do achieve a lower accuracy, while a decreased dropout rate does increase our accuracy.
+
+## (b)
+
+```{r}
+cifar10full <- dataset_cifar10() # See ?dataset_cifar10 for more info
+sela <- (cifar10full$train$y < 6)
+# select only first six categories
+selb <- (cifar10full$test$y < 6)
+cifar10 <- list(train=list(x=cifar10full$train$x[sela,,,],
+                           y=cifar10full$train$y[sela]), 
+                test=list(x=cifar10full$test$x[selb,,,],
+                          y=cifar10full$test$y[selb]))
+# Scale RGB values in test and train inputs:
+x_train <- cifar10$train$x / 255
+x_test <- cifar10$test$x / 255
+y_train <- to_categorical(cifar10$train$y, num_classes = 6)
+y_test <- to_categorical(cifar10$test$y, num_classes = 6)
+
+# Transform (manually) to grayscale
+x_train2 <- 0.3 * x_train[,,,1] + 0.59 * x_train[,,,2] + 0.11 * x_train[,,,3]
+x_test2 <- 0.3 * x_test[,,,1] + 0.59 * x_test[,,,2] + 0.11 * x_test[,,,3]
+x_train2 <- x_train2[,2:31,2:31] # omit a one pixel border
+x_test2 <- x_test2[,2:31,2:31]
+dim(x_train2) <- c(dim(x_train2), 1) # Fitting requires 4-dimensional array
+dim(x_test2) <- c(dim(x_test2), 1)
+rm(x_train, x_test, cifar10, cifar10full) # not needed anymore
+
+# Define a function to create the model with a specified filter size
+create_model <- function(filter_size) {
+  model <- keras_model_sequential() %>%
+    layer_conv_2d(filters = 32, kernel_size = filter_size, activation = "relu", input_shape = c(30, 30, 1)) %>%
+    layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+    layer_dropout(rate = 0.25) %>%
+    layer_conv_2d(filters = 64, kernel_size = filter_size, activation = "relu") %>%
+    layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+    layer_dropout(rate = 0.25) %>%
+    layer_flatten() %>%
+    layer_dense(units = 128, activation = "relu") %>%
+    layer_dropout(rate = 0.25) %>%
+    layer_dense(units = 6) %>%
+    layer_activation("softmax")
+  
+  model %>% compile(
+    loss = "categorical_crossentropy",
+    optimizer = optimizer_adam(),
+    metrics = c("accuracy")
+  )
+  
+  return(model)
+}
+
+# Train and evaluate the baseline model
+baseline_model <- create_model(filter_size = c(3, 3))
+baseline_history <- baseline_model %>% fit(
+  x_train2, y_train,
+  epochs = 10,
+  batch_size = 64,
+  validation_split = 0.2
+)
+baseline_score <- baseline_model %>% evaluate(x_test2, y_test)
+
+# Train and evaluate the model with increased filter size
+increased_filter_model <- create_model(filter_size = c(5, 5))
+increased_filter_history <- increased_filter_model %>% fit(
+  x_train2, y_train,
+  epochs = 10,
+  batch_size = 64,
+  validation_split = 0.2
+)
+increased_filter_score <- increased_filter_model %>% evaluate(x_test2, y_test)
+
+# Train and evaluate the model with decreased filter size
+decreased_filter_model <- create_model(filter_size = c(2, 2))
+decreased_filter_history <- decreased_filter_model %>% fit(
+  x_train2, y_train,
+  epochs = 10,
+  batch_size = 64,
+  validation_split = 0.2
+)
+decreased_filter_score <- decreased_filter_model %>% evaluate(x_test2, y_test)
+
+# Compare the results
+results <- data.frame(
+  Model = c("Baseline", "Increased Filter Size", "Decreased Filter Size"),
+  Accuracy = c(baseline_score$accuracy, increased_filter_score$accuracy, decreased_filter_score$accuracy)
+)
+print(results)
+```
+
+From the results, we cannot observe a big difference in accuracy, though the Baseline is the most accurate.
+
+## (c)
+
+```{r}
+cifar10full <- dataset_cifar10() # See ?dataset_cifar10 for more info
+sela <- (cifar10full$train$y < 6)
+# select only first six categories
+selb <- (cifar10full$test$y < 6)
+cifar10 <- list(train=list(x=cifar10full$train$x[sela,,,],
+                           y=cifar10full$train$y[sela]), 
+                test=list(x=cifar10full$test$x[selb,,,],
+                          y=cifar10full$test$y[selb]))
+# Scale RGB values in test and train inputs:
+x_train <- cifar10$train$x / 255
+x_test <- cifar10$test$x / 255
+y_train <- to_categorical(cifar10$train$y, num_classes = 6)
+y_test <- to_categorical(cifar10$test$y, num_classes = 6)
+
+# Transform (manually) to grayscale
+x_train2 <- 0.3 * x_train[,,,1] + 0.59 * x_train[,,,2] + 0.11 * x_train[,,,3]
+x_test2 <- 0.3 * x_test[,,,1] + 0.59 * x_test[,,,2] + 0.11 * x_test[,,,3]
+x_train2 <- x_train2[,2:31,2:31] # omit a one pixel border
+x_test2 <- x_test2[,2:31,2:31]
+dim(x_train2) <- c(dim(x_train2), 1) # Fitting requires 4-dimensional array
+dim(x_test2) <- c(dim(x_test2), 1)
+rm(x_train, x_test, cifar10, cifar10full) # not needed anymore
+
+# Define a function to create the model with a specified filter size for the second layer
+create_model <- function(second_layer_filter_size) {
+  model <- keras_model_sequential() %>%
+    layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = "relu", input_shape = c(30, 30, 1)) %>%
+    layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+    layer_dropout(rate = 0.25) %>%
+    layer_conv_2d(filters = 64, kernel_size = second_layer_filter_size, activation = "relu") %>%
+    layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+    layer_dropout(rate = 0.25) %>%
+    layer_flatten() %>%
+    layer_dense(units = 128, activation = "relu") %>%
+    layer_dropout(rate = 0.25) %>%
+    layer_dense(units = 6) %>%
+    layer_activation("softmax")
+  
+  model %>% compile(
+    loss = "categorical_crossentropy",
+    optimizer = optimizer_adam(),
+    metrics = c("accuracy")
+  )
+  
+  return(model)
+}
+
+# Train and evaluate the baseline model
+baseline_model <- create_model(second_layer_filter_size = c(3, 3))
+baseline_history <- baseline_model %>% fit(
+  x_train2, y_train,
+  epochs = 10,
+  batch_size = 64,
+  validation_split = 0.2
+)
+baseline_score <- baseline_model %>% evaluate(x_test2, y_test)
+
+# Train and evaluate the model with increased filter size in the second layer
+increased_filter_model <- create_model(second_layer_filter_size = c(5, 5))
+increased_filter_history <- increased_filter_model %>% fit(
+  x_train2, y_train,
+  epochs = 10,
+  batch_size = 64,
+  validation_split = 0.2
+)
+increased_filter_score <- increased_filter_model %>% evaluate(x_test2, y_test)
+
+# Compare the results
+results <- data.frame(
+  Model = c("Baseline", "Increased Filter Size in Second Layer"),
+  Accuracy = c(baseline_score$accuracy, increased_filter_score$accuracy)
+)
+print(results)
+```
+
+Indeed, it does not imporve performance, the performance stays the same.
