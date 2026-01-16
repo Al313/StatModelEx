@@ -1,2 +1,2 @@
 # StatModelEx
-A group to share code for the worksheet exercises of Statistical Modelling course
+Working group for the Statistical Modelling course, focused on completing and executing worksheet exercises.
